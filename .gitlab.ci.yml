@@ -1,0 +1,13 @@
+pages:
+  image: node:9
+  stage: build
+  script:
+    - npm install --progress=false
+    - npm run build
+    - cp -r dist/* public/
+    - find public -type f -regex '.*\.\(htm\|html\|txt\|text\|js\|css\)$' -exec gzip -f -k {} \;
+  artifacts:
+    paths:
+    - public
+  only:
+    - master
