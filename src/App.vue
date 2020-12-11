@@ -114,7 +114,7 @@ export default {
       margin-left: 15px;
     }
     .YR__ctn {
-      margin: 20px 30px 90px 30px;
+      margin: 20px 30px 85px 30px;
       z-index: 2;
     }
   }

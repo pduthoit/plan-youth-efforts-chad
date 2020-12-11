@@ -36,10 +36,29 @@ export default {
     '$store.state.lang': function() {
       this.translate()
     },
+    '$store.state.minYearFilter': function() {
+      this.updateIcons()
+    },
+    '$store.state.maxYearFilter': function() {
+      this.updateIcons()
+    },
   },
   methods: {
     initialized: function (map) {
       this.$store.commit('updateMap', map)
+    },
+    updateIcons: function () {
+      for (var key in this.$store.state.categories) {
+        if (typeof this.$store.state.map.getLayer('poi-' + key) !== 'undefined') {
+          console.log(this.$store.state.minYearFilter + this.$store.state.minYearShown - 1)
+          console.log(this.$store.state.maxYearFilter + this.$store.state.minYearShown - 1)
+          this.$store.state.map.setFilter('poi-' + key,
+            ['all',
+            ['>=', 'year', this.$store.state.minYearFilter + this.$store.state.minYearShown - 1],
+            ['<', 'year', this.$store.state.maxYearFilter + this.$store.state.minYearShown - 1]
+          ]);
+        }
+      }
     },
     loaded(map) {
       this.showIcons(map)
@@ -76,6 +95,7 @@ export default {
         {
         'type': 'Feature',
         'properties': {
+        'year': 2019,
         'icon': 'child-protection',
         'label': 'This is a label',
         'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate. Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
@@ -88,6 +108,7 @@ export default {
         {
         'type': 'Feature',
         'properties': {
+        'year': 2017,
         'icon': 'child-protection',
         'label': 'This is a label',
         'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
@@ -100,6 +121,7 @@ export default {
         {
         'type': 'Feature',
         'properties': {
+        'year': 2020,
         'icon': 'sexual-violence',
         'label': 'This is a label',
         'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
@@ -112,6 +134,7 @@ export default {
         {
         'type': 'Feature',
         'properties': {
+        'year': 2019,
         'icon': 'community-building',
         'label': 'This is a label',
         'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
@@ -124,6 +147,7 @@ export default {
         {
         'type': 'Feature',
         'properties': {
+        'year': 2019,
         'icon': 'data',
         'label': 'This is a label',
         'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
@@ -136,6 +160,7 @@ export default {
         {
         'type': 'Feature',
         'properties': {
+        'year': 2019,
         'icon': 'school',
         'label': 'This is a label',
         'description': 'Aenean mi lacus, euismod ac nibh eu, aliquet efficitur elit. Sed varius vulputate metus.'
@@ -148,6 +173,7 @@ export default {
         {
           'type': 'Feature',
         'properties': {
+        'year': 2019,
           'icon': 'school',
         'label': 'This is a label',
         'description': ' Etiam vitae neque at orci euismod vulputate nec at ipsum. Nam at ipsum elementum, sollicitudin purus egestas, ultricies eros. Integer in viverra ante. Duis nec sapien at turpis vestibulum pellentesque. Aliquam sed magna ac libero sodales venenatis vitae quis urna. Phasellus interdum risus consectetur maximus elementum. Maecenas vel libero metus.'
@@ -160,6 +186,7 @@ export default {
         {
         'type': 'Feature',
         'properties': {
+        'year': 2019,
         'icon': 'school',
         'label': 'This is a label',
         'description': ''
@@ -172,6 +199,7 @@ export default {
         {
         'type': 'Feature',
         'properties': {
+        'year': 2017,
         'icon': 'training',
         'label': 'This is a label',
         'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'

@@ -1,6 +1,6 @@
 <template>
   <div class="YR__ctn">
-    <div class="YR YR__draglist">
+    <div class="YR YR--draglist">
       <draggable class="YR__dragzone" :move="checkMove" :list="element" group="people" @change="log(minYearShown)" v-for="(element, index) in this.years" :key="index">
         <div
           class="YR__dragpoint"
@@ -10,8 +10,12 @@
       </draggable>
       <rawDisplayer class="col-3" :value="years" title="List 1" />
     </div>
-    <div class="YR">
-      <div class="YR__bar" v-for="index in yearsCount" :key="index" :data-year="minYearShown + index - 1"></div>
+    <div class="YR YR--barCtn">
+      <div
+        class="YR__bar "
+        :data-active="((index) >= $store.state.minYearFilter) && ((index) < $store.state.maxYearFilter)" v-for="index in yearsCount"
+        :key="index"
+        :data-year="minYearShown + index - 1"></div>
     </div>
   </div>
 </template>
@@ -27,10 +31,14 @@ export default {
   props: {
     msg: String
   },
+  watch: {
+  },
   data() {
     return {
       yearsCount: 6,
       years: null,
+      maxYearFilter: this.$store.state.defaultMaxYearFilter,
+      minYearFilter: this.$store.state.defaultMinYearFilter
     };
   },
   created: function() {
@@ -38,13 +46,15 @@ export default {
   },
   computed: {
     delta: function () {
-      return this.$store.state.defaultMaxYearFilter - this.$store.state.minYearFilter
+      return this.maxYearFilter - this.minYearFilter
     },
     minYearShown: function () {
-      return this.$store.state.defaultMinYearFilter - this.minYear
+      let minYearShown = this.$store.state.defaultMinYearFilter - this.minYear;
+      this.$store.commit('updateMinYearShown', minYearShown)
+      return minYearShown
     },
     minYear: function () {
-      return Math.floor(this.yearsCount / 2 - this.delta)
+      return Math.floor(this.yearsCount / 2 - this.delta);
     },
     maxYear: function () {
       return this.yearsCount - Math.ceil(this.yearsCount / 2 - this.delta)
@@ -68,6 +78,7 @@ export default {
     log: function(year) {
       window.console.log(year);
       window.console.log(this.years);
+      window.console.log(this.minYear);
       let min = null, max = null;
       let index = this.minYear;
       this.years.forEach(year => {
@@ -111,18 +122,20 @@ export default {
   @{s}__ctn {
     @{s} {
       width: 100%;
-      height: 100%;
+      height: @year-bar-h;
       display: flex;
       flex-flow: row nowrap;
       justify-content: center;
-      align-items: flex-end;
 
       @year-bar-w: 100px;
       @year-bar-h: 10px;
 
-      &@{s}__draglist {
+      &@{s}--barCtn {
+        box-shadow: 0 6px 15px -1px rgb(178 204 226);
+      }
+      &@{s}--draglist {
         position: relative;
-        top: @year-bar-h;
+        top: 0;
         z-index: 1;
 
         @{s}__dragzone {
@@ -162,8 +175,18 @@ export default {
         height: @year-bar-h;
         background-color: #fff;
 
-        @year-tip: 28px;
+        @year-tip: 18px;
         @year-tip-offset: 5px;
+
+        &[data-active] {
+          background: @color-lighten-primary;
+
+          &:not(@{s}__bar--hidden) {
+            &::before {
+              font-weight: bold;
+            }
+          }
+        }
 
         &:not(@{s}__bar--hidden) {
 
@@ -182,6 +205,7 @@ export default {
             position: absolute;
             left: @year-tip-offset;
             height: @year-tip;
+            top: @year-bar-h;
             width: 2px;
             background: #fff;
           }

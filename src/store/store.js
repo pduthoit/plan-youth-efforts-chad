@@ -12,6 +12,7 @@ export default new Vuex.Store({
     lang: 'en',
     defaultMinYearFilter: defaultMinYear,
     defaultMaxYearFilter: defaultMaxYear,
+    minYearShown: null,
     minYearFilter: defaultMinYear,
     maxYearFilter: defaultMaxYear,
     categories: {
@@ -29,6 +30,9 @@ export default new Vuex.Store({
     },
     updateLang (state, lang) {
       state.lang = lang
+    },
+    updateMinYearShown (state, minYearShown) {
+      state.minYearShown = minYearShown
     },
     updateMinYearFilter (state, year) {
       console.log("updated from store ! min : " + year)
