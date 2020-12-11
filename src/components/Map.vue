@@ -49,13 +49,13 @@ export default {
     },
     updateIcons: function () {
       for (var key in this.$store.state.categories) {
-        if (typeof this.$store.state.map.getLayer('poi-' + key) !== 'undefined') {
-          console.log(this.$store.state.minYearFilter + this.$store.state.minYearShown - 1)
-          console.log(this.$store.state.maxYearFilter + this.$store.state.minYearShown - 1)
-          this.$store.state.map.setFilter('poi-' + key,
+        let categ = key;
+        if (typeof this.$store.state.map.getLayer('poi-' + categ) !== 'undefined') {
+          this.$store.state.map.setFilter('poi-' + categ,
             ['all',
             ['>=', 'year', this.$store.state.minYearFilter + this.$store.state.minYearShown - 1],
             ['<', 'year', this.$store.state.maxYearFilter + this.$store.state.minYearShown - 1]
+            ,['==', 'icon', categ]
           ]);
         }
       }
@@ -79,138 +79,42 @@ export default {
       this.$store.state.map.setLayoutProperty('country-label', 'text-field', ['get', 'name_' + this.$store.state.lang]);
     },
     showIcons: function (map) {
-      for (var key in this.$store.state.categories) {
-        let category = key
+      for (let key in this.$store.state.categories) {
+        var path = require('../assets/img/icons/' + key + '.png');
         map.loadImage(
-          require('../assets/img/icons/' + category + '.png'),
+          path,
           function (error, image) {
+            var category = key
             if (error) throw error;
             map.addImage(category, image);
         });
       }
 
+      var geojson = [];
+      console.log(this.$DATA)
+      Array.prototype.forEach.call(this.$DATA , function(line) {
+        console.log(line)
+        geojson.push({
+          'type': 'Feature',
+          'properties': {
+            'year': line.year,
+            'icon': line.icon,
+            'label': line.label,
+            'description': line.description
+          },
+          'geometry': {
+          'type': 'Point',
+          'coordinates': line.coords
+          }
+        })
+        
+      })
+      
+
       var places = {
         'type': 'FeatureCollection',
-        'features': [
-        {
-        'type': 'Feature',
-        'properties': {
-        'year': 2019,
-        'icon': 'child-protection',
-        'label': 'This is a label',
-        'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate. Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
-        },
-        'geometry': {
-        'type': 'Point',
-        'coordinates': [14.212659, 12.731567]
-        }
-        },
-        {
-        'type': 'Feature',
-        'properties': {
-        'year': 2017,
-        'icon': 'child-protection',
-        'label': 'This is a label',
-        'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
-        },
-        'geometry': {
-        'type': 'Point',
-        'coordinates': [14.403168, 12.394651]
-        }
-        },
-        {
-        'type': 'Feature',
-        'properties': {
-        'year': 2020,
-        'icon': 'sexual-violence',
-        'label': 'This is a label',
-        'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
-        },
-        'geometry': {
-        'type': 'Point',
-        'coordinates': [14.503168, 12.794651]
-        }
-        },
-        {
-        'type': 'Feature',
-        'properties': {
-        'year': 2019,
-        'icon': 'community-building',
-        'label': 'This is a label',
-        'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
-        },
-        'geometry': {
-        'type': 'Point',
-        'coordinates': [14.090372, 12.681189]
-        }
-        },
-        {
-        'type': 'Feature',
-        'properties': {
-        'year': 2019,
-        'icon': 'data',
-        'label': 'This is a label',
-        'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
-        },
-        'geometry': {
-        'type': 'Point',
-        'coordinates': [14.852477, 12.443951]
-        }
-        },
-        {
-        'type': 'Feature',
-        'properties': {
-        'year': 2019,
-        'icon': 'school',
-        'label': 'This is a label',
-        'description': 'Aenean mi lacus, euismod ac nibh eu, aliquet efficitur elit. Sed varius vulputate metus.'
-        },
-        'geometry': {
-          'type': 'Point',
-        'coordinates': [14.631706, 12.914581]
-        }
-        },
-        {
-          'type': 'Feature',
-        'properties': {
-        'year': 2019,
-          'icon': 'school',
-        'label': 'This is a label',
-        'description': ' Etiam vitae neque at orci euismod vulputate nec at ipsum. Nam at ipsum elementum, sollicitudin purus egestas, ultricies eros. Integer in viverra ante. Duis nec sapien at turpis vestibulum pellentesque. Aliquam sed magna ac libero sodales venenatis vitae quis urna. Phasellus interdum risus consectetur maximus elementum. Maecenas vel libero metus.'
-        },
-        'geometry': {
-        'type': 'Point',
-        'coordinates': [15.020945, 12.278241]
-        }
-        },
-        {
-        'type': 'Feature',
-        'properties': {
-        'year': 2019,
-        'icon': 'school',
-        'label': 'This is a label',
-        'description': ''
-        },
-        'geometry': {
-        'type': 'Point',
-        'coordinates': [14.007481, 12.876516]
-        }
-        },
-        {
-        'type': 'Feature',
-        'properties': {
-        'year': 2017,
-        'icon': 'training',
-        'label': 'This is a label',
-        'description': 'Phasellus ac eros ligula. In congue diam nec eleifend vulputate.'
-        },
-        'geometry': {
-        'type': 'Point',
-        'coordinates': [14.007481, 12.876516]
-        }
-        }
-        ]
-        };
+        'features': geojson
+      };
       let self = this;
       map.addSource('places', {
         'type': 'geojson',

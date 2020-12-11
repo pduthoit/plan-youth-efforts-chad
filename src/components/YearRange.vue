@@ -1,5 +1,19 @@
 <template>
   <div class="YR__ctn">
+    <div class="YR YR--barCharts">
+      <div
+        class="YR__barChart"
+        v-for="(element, index) in this.years"
+        :data-active="((index + 1) >= $store.state.minYearFilter) && ((index + 1) < $store.state.maxYearFilter)"
+        :key="index">
+        <div class="YR__col"></div>
+        <div class="YR__col"></div>
+        <div class="YR__col"></div>
+        <div class="YR__col"></div>
+        <div class="YR__col"></div>
+        <div class="YR__col"></div>
+      </div>
+    </div>
     <div class="YR YR--draglist">
       <draggable class="YR__dragzone" :move="checkMove" :list="element" group="people" @change="log(minYearShown)" v-for="(element, index) in this.years" :key="index">
         <div
@@ -35,10 +49,11 @@ export default {
   },
   data() {
     return {
-      yearsCount: 6,
+      yearsCount: this.$store.state.yearsCount,
       years: null,
       maxYearFilter: this.$store.state.defaultMaxYearFilter,
-      minYearFilter: this.$store.state.defaultMinYearFilter
+      minYearFilter: this.$store.state.defaultMinYearFilter,
+      data: null
     };
   },
   created: function() {
@@ -75,10 +90,7 @@ export default {
         name: el.name + " cloned"
       };
     },
-    log: function(year) {
-      window.console.log(year);
-      window.console.log(this.years);
-      window.console.log(this.minYear);
+    log: function() {
       let min = null, max = null;
       let index = this.minYear;
       this.years.forEach(year => {
@@ -99,12 +111,18 @@ export default {
 
     initYearsData: function() {
       let years = [];
-      for (let step = 0, yearLoop = this.minYearShown; step < this.yearsCount; step++, yearLoop++) {
+      for (var step = 0, yearLoop = this.minYearShown; step < this.yearsCount; step++, yearLoop++) {
         if (step < this.minYear) years.push([])
         else if (step >= this.maxYear) years.push([])
         else {
-          if (yearLoop === this.$store.state.minYearFilter) years.push([{ type: "from", id: 1, year: yearLoop }])
-          else if (yearLoop === this.$store.state.maxYearFilter) years.push([{ type: "to", id: 2, year: yearLoop }])
+          if (yearLoop === this.$store.state.minYearFilter) {
+            years.push([{ type: "from", id: 1, year: yearLoop }])
+            this.$store.commit('updateMinYearFilter', step + 1)
+          }
+          else if (yearLoop === this.$store.state.maxYearFilter) {
+            years.push([{ type: "to", id: 2, year: yearLoop }])
+            this.$store.commit('updateMaxYearFilter', step + 1)
+          }
           else years.push([])
         }
       }
@@ -130,9 +148,43 @@ export default {
       @year-bar-w: 100px;
       @year-bar-h: 10px;
 
-      &@{s}--barCtn {
-        box-shadow: 0 6px 15px -1px rgb(178 204 226);
+      &@{s}--barCharts {
+        height: 0;
+        position: relative;
+        top: @year-bar-h;
+
+        @{s}__barChart {
+          display: flex;
+          flex-flow: row nowrap;
+          align-items: flex-end;
+          justify-content: center;
+          width: @year-bar-w;
+          @bar-max-h: 40px;
+          height: @bar-max-h;
+          top: -@bar-max-h;
+          padding: 0 20px;
+          box-sizing: border-box;
+          position: relative;
+
+          @{s}__col {
+            background: #555;
+            border: solid 1px white;
+            height: 100%;
+            flex: 1;
+            transform: scaleY(0);
+            transform-origin: bottom center;
+            transition: transform .15s ease-in-out;
+          }
+          &[data-active] {
+
+            @{s}__col {
+              transform: scaleY(1);
+            }
+          }
+
+        }
       }
+
       &@{s}--draglist {
         position: relative;
         top: 0;

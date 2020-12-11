@@ -10,6 +10,7 @@ export default new Vuex.Store({
   state: {
     map: null,
     lang: 'en',
+    yearsCount: 6,
     defaultMinYearFilter: defaultMinYear,
     defaultMaxYearFilter: defaultMaxYear,
     minYearShown: null,
@@ -35,18 +36,14 @@ export default new Vuex.Store({
       state.minYearShown = minYearShown
     },
     updateMinYearFilter (state, year) {
-      console.log("updated from store ! min : " + year)
       state.minYearFilter = year
     },
     updateMaxYearFilter (state, year) {
-      console.log(state.maxYearFilter)
-      console.log("updated from store ! max : " + year)
       state.maxYearFilter = year
-      console.log(state.maxYearFilter)
     },
     toggleMapLayerState(state, category) {
       state.categories[category].shown = !state.categories[category].shown;
-      
+
       if (typeof state.map.getLayer('poi-' + category) !== 'undefined') {
         state.map.setLayoutProperty(
           'poi-' + category,
