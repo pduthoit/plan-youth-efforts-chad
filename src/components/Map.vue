@@ -61,7 +61,7 @@ export default {
       });
       setTimeout(function () {
         map.flyTo({
-          center: [14.2, 12.7],
+          center: [14.5, 12.5],
           zoom: 7.5,
           speed: 0.6,
           essential: true,
