@@ -174,9 +174,9 @@ export default {
           padding: 0 20px;
           box-sizing: border-box;
           position: relative;
-          transform: scaleY(0);
 
-          &[data-active] { transform: scaleY(1); }
+          &[data-active] @{s}__col { transform: scaleY(1); }
+          &:not([data-active]) @{s}__col { transform: scaleY(0); }
 
           @{s}__col {
             background: #555;
@@ -184,7 +184,7 @@ export default {
             height: 100%;
             flex: 1;
             transform-origin: bottom center;
-            transition: height .15s ease-in-out, flex .15s ease-in, border-width .01ms .15s;
+            transition: height .15s ease-in-out, flex .15s ease-in, border-width .01ms .15s, transform .15s ease-in;
             position: relative;
             opacity: 0.8;
             border-radius: 3px 3px 0 0;
@@ -235,7 +235,12 @@ export default {
           border-radius: 50%;
           margin-right: calc(@year-bar-w - @year-bar-h);
           position: relative;
+
+          @padding-y: 40px;
+
           top: @year-bar-h;
+          top: -@padding-y + @year-bar-h;
+          padding: @padding-y 0;
 
           @{s}__dragpoint {
             @bigger-wh: 8px;
@@ -259,6 +264,9 @@ export default {
         }
       }
 
+      &@{s}--barCtn { 
+        box-shadow: 0 6px 15px -2px #b2cce2;
+      }
       @{s}__bar {
 
         position: relative;

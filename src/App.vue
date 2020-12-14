@@ -108,6 +108,8 @@ export default {
 
     .Sponsors {
       z-index: 2;
+      transform: scale(0.7);
+      transform-origin: bottom right;
     }
     .Legend {
       align-self: flex-start;

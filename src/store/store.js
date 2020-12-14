@@ -17,9 +17,9 @@ export default new Vuex.Store({
     minYearFilter: defaultMinYear,
     maxYearFilter: defaultMaxYear,
     categories: {
-      'education': { icon: 'education', label: 'education', shown: true, color: "#67cfe3"},
-      'health': { icon: 'health', label: 'health', shown: true, color: "#e5007d"},
-      'youth-organizations': { icon: 'youth-organizations', label: 'youth-organizations', shown: true, color: "#0055b8"}
+      'education': { icon: 'education', shown: true, color: "#67cfe3"},
+      'health': { icon: 'health', shown: true, color: "#e5007d"},
+      'youth-organizations': { icon: 'youth-organizations', shown: true, color: "#0055b8"}
       // 'child-protection': { icon: 'child-protection', label: 'child-protection', shown: true, color: "#0072ce"},
       // 'community-building': { icon: 'community-building', label: 'community-building', shown: true, color: "#00843d"},
       // 'data': { icon: 'data', label: 'data', shown: true, color: "#e17800"},
