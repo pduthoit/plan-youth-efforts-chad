@@ -27,7 +27,8 @@ export default {
   z-index: 1;
   border-radius: 8px;
   overflow: hidden;
-  width: 170px;
+  width: 190px;
+  margin-bottom: 25px;
   color: #fff;
   box-shadow: 0 6px 15px -5px rgb(178 204 226);
 

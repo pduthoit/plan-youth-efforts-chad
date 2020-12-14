@@ -17,12 +17,15 @@ export default new Vuex.Store({
     minYearFilter: defaultMinYear,
     maxYearFilter: defaultMaxYear,
     categories: {
-      'child-protection': { icon: 'child-protection', label: 'child-protection', shown: true, color: "#0072ce"},
-      'community-building': { icon: 'community-building', label: 'community-building', shown: true, color: "#00843d"},
-      'data': { icon: 'data', label: 'data', shown: true, color: "#e17800"},
-      'school': { icon: 'school', label: 'school', shown: true, color: "#d22630"},
-      'sexual-violence': { icon: 'sexual-violence', label: 'sexual-violence', shown: true, color: "#ef008c"},
-      'training': { icon: 'training', label: 'training', shown: true, color: "#f1c400"},
+      'education': { icon: 'education', label: 'education', shown: true, color: "#67cfe3"},
+      'health': { icon: 'health', label: 'health', shown: true, color: "#e5007d"},
+      'youth-organizations': { icon: 'youth-organizations', label: 'youth-organizations', shown: true, color: "#0055b8"}
+      // 'child-protection': { icon: 'child-protection', label: 'child-protection', shown: true, color: "#0072ce"},
+      // 'community-building': { icon: 'community-building', label: 'community-building', shown: true, color: "#00843d"},
+      // 'data': { icon: 'data', label: 'data', shown: true, color: "#e17800"},
+      // 'school': { icon: 'school', label: 'school', shown: true, color: "#d22630"},
+      // 'sexual-violence': { icon: 'sexual-violence', label: 'sexual-violence', shown: true, color: "#ef008c"},
+      // 'training': { icon: 'training', label: 'training', shown: true, color: "#f1c400"},
     }
   },
   mutations: {

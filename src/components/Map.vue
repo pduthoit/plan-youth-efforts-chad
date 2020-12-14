@@ -26,7 +26,6 @@ export default {
   props: {
     // msg: String
   },
-
   computed: {
     lang: function () {
       return this.$store.state.lang
@@ -51,12 +50,7 @@ export default {
       for (var key in this.$store.state.categories) {
         let categ = key;
         if (typeof this.$store.state.map.getLayer('poi-' + categ) !== 'undefined') {
-          this.$store.state.map.setFilter('poi-' + categ,
-            ['all',
-            ['>=', 'year', this.$store.state.minYearFilter + this.$store.state.minYearShown - 1],
-            ['<', 'year', this.$store.state.maxYearFilter + this.$store.state.minYearShown - 1]
-            ,['==', 'icon', categ]
-          ]);
+          this.$store.state.map.setFilter('poi-' + categ, this.getMapFilter(categ));
         }
       }
     },
@@ -75,6 +69,14 @@ export default {
         });
       });
     },
+    getMapFilter: function (category) { 
+      return [
+        'all',
+        ['>=', 'year', this.$store.state.minYearFilter + this.$store.state.minYearShown - 1],
+        ['<', 'year', this.$store.state.maxYearFilter + this.$store.state.minYearShown - 1]
+        ,['==', 'icon', category]
+      ];
+    },
     translate: function () {
       this.$store.state.map.setLayoutProperty('country-label', 'text-field', ['get', 'name_' + this.$store.state.lang]);
     },
@@ -91,7 +93,6 @@ export default {
       }
 
       var geojson = [];
-      console.log(this.$DATA)
       Array.prototype.forEach.call(this.$DATA , function(line) {
         console.log(line)
         geojson.push({
@@ -107,9 +108,8 @@ export default {
           'coordinates': line.coords
           }
         })
-        
       })
-      
+
 
       var places = {
         'type': 'FeatureCollection',
@@ -138,22 +138,8 @@ export default {
             // 'text-size': 10,
             // 'text-variable-anchor': ['top', 'bottom', 'left', 'right']
           },
-            'filter': ['==', 'icon', symbol]
+            'filter': self.getMapFilter(symbol)
           });
-          // map.on('mousemove', layerID, function (e) {
-          //   var label = e.features[0].properties.label;
-          //   var coordinates = e.features[0].geometry.coordinates.slice();
-            
-          //   while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-          //     coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-          //   }
-            
-          //   new mapboxgl
-          //     .setLngLat(coordinates)
-          //     .setHTML(label)
-          //     .addTo(map);
-
-          // })
           map.on('click', layerID, function (e) {
             var coordinates = e.features[0].geometry.coordinates.slice();
             var image = '<div class="Image" style="background-image: url(https://www.plan-international.fr/sites/default/files/styles/blog_index/public/field/field_image_listing/appel_a_projets.jpg?itok=z-hc_lGo);"></div>';

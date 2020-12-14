@@ -3,15 +3,19 @@
     <div class="YR YR--barCharts">
       <div
         class="YR__barChart"
-        v-for="(element, index) in this.years"
-        :data-active="((index + 1) >= $store.state.minYearFilter) && ((index + 1) < $store.state.maxYearFilter)"
-        :key="index">
-        <div class="YR__col"></div>
-        <div class="YR__col"></div>
-        <div class="YR__col"></div>
-        <div class="YR__col"></div>
-        <div class="YR__col"></div>
-        <div class="YR__col"></div>
+        v-for="(element, index) in this.data"
+        :data-active="((index - $store.state.minYearShown + 1) >= $store.state.minYearFilter) && ((index - $store.state.minYearShown + 1) < $store.state.maxYearFilter)"
+        :data-key="index"
+        :key="index"
+        >
+        <div
+          class="YR__col"
+          :data-cat="key"
+          :data-count="yearCatRow.count"
+          :data-show="$store.state.categories[key].shown"
+          :style="'height: '+ (yearCatRow.count / maxCount) * 100 +'%; background: '+ $store.state.categories[key].color +';'"
+          v-for="(yearCatRow, key) in data[index]" :key="key">
+        </div>
       </div>
     </div>
     <div class="YR YR--draglist">
@@ -53,13 +57,17 @@ export default {
       years: null,
       maxYearFilter: this.$store.state.defaultMaxYearFilter,
       minYearFilter: this.$store.state.defaultMinYearFilter,
-      data: null
+      data: this.$YEAR_DATA,
+      maxCount: this.$MAX_COUNT
     };
   },
   created: function() {
     this.years = this.initYearsData()
   },
   computed: {
+    maxByActiveCatAndYear: function () {
+      return this.maxYearFilter - this.minYearFilter
+    },
     delta: function () {
       return this.maxYearFilter - this.minYearFilter
     },
@@ -152,6 +160,7 @@ export default {
         height: 0;
         position: relative;
         top: @year-bar-h;
+        z-index: 2;
 
         @{s}__barChart {
           display: flex;
@@ -161,24 +170,54 @@ export default {
           width: @year-bar-w;
           @bar-max-h: 40px;
           height: @bar-max-h;
-          top: -@bar-max-h;
+          margin-top: -@bar-max-h;
           padding: 0 20px;
           box-sizing: border-box;
           position: relative;
+          transform: scaleY(0);
+
+          &[data-active] { transform: scaleY(1); }
 
           @{s}__col {
             background: #555;
             border: solid 1px white;
             height: 100%;
             flex: 1;
-            transform: scaleY(0);
             transform-origin: bottom center;
-            transition: transform .15s ease-in-out;
-          }
-          &[data-active] {
+            transition: height .15s ease-in-out, flex .15s ease-in, border-width .01ms .15s;
+            position: relative;
+            opacity: 0.8;
+            border-radius: 3px 3px 0 0;
 
-            @{s}__col {
-              transform: scaleY(1);
+            &:not([data-show]) {
+              flex: 0;
+              border-width: 0;
+            }
+            &::before {
+              content: attr(data-count);
+              font-size: 12px;
+              left: -100%;
+              transition: all 0.2s ease-in;
+              opacity: 0;
+              position: absolute;
+              top: 0;
+              color: white;
+              background: rgba(0, 0, 0, 0.6);
+              border-radius: 8px;
+              margin: 0 auto;
+              left: 0;
+              right: 0;
+              text-align: center;
+              padding: 2px 0;
+              transform: translateY(-15px);
+              z-index: 3;
+            }
+
+            &:hover {
+              &::before {
+                transform: translateY(-20px);
+                opacity: 1;
+              }
             }
           }
 

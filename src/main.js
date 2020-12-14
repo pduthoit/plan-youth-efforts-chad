@@ -14,7 +14,7 @@ Vue.prototype.$COLORS = {
 let categories = Object.keys(store.state.categories)
 var data = [];
 
-for (let i = 0; i < 15; i++) {
+for (let i = 0; i < 200; i++) {
   var coord_x = Math.random() + 14;
   var coord_y = Math.random() + 12;
   var year = Math.floor(Math.random() * 10) + 2015;
@@ -31,18 +31,26 @@ for (let i = 0; i < 15; i++) {
   data.push(dataRow);
 }
 
-// var yearCount = {};
-// let catArr = {};
-// let yearsList = [...new Set(data.map(item => item.year))];
+var yearCount = {};
+let catArr = {};
+let yearsList = [...new Set(data.map(item => item.year))];
+Array.prototype.forEach.call(categories , function(category) { catArr[category] = {'count': 0} })
+for (let i = Math.min(...yearsList); i <= Math.max(...yearsList); i++) { yearCount[i] = JSON.parse(JSON.stringify(catArr)) }
 
-// Array.prototype.forEach.call(categories , function(category) { catArr[category] = {'count': 0} })
-// let minYear = Math.min(...yearsList)
-// for (let i = minYear; i < yearsList.length + minYear; i++) { yearCount[i] = catArr }
+Array.prototype.forEach.call(data , function(line) {
+  yearCount[line.year][line.icon].count += 1
+})
 
-// Array.prototype.forEach.call(data , function(line) {
-//   yearCount[line.year][line.icon].count += 1
-// })
+let maxCount = 0;
 
+for (const [year] of Object.entries(yearCount)) {
+  for (const [cat] of Object.entries(yearCount[year])) {
+    if (yearCount[year][cat].count > maxCount) maxCount = yearCount[year][cat].count
+  }
+}
+
+Vue.prototype.$MAX_COUNT = maxCount;
+Vue.prototype.$YEAR_DATA = yearCount;
 Vue.prototype.$DATA = data;
 
 new Vue({
