@@ -36,7 +36,7 @@ export default {
 
 .Legend {
   z-index: 1;
-  border-radius: 3px;
+  border-radius: @rad-box;
   overflow: hidden;
   margin-bottom: 25px;
   color: #fff;
@@ -50,7 +50,7 @@ export default {
     input[type='checkbox']:first-child + label {
       border-radius: 3px 3px 0 0;
     }
-   
+
     label:last-child {
       border-radius: 0 0 3px 3px;
       border: none;

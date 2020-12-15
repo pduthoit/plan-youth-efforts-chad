@@ -145,6 +145,12 @@ export default {
 
   @s: .YR;
 
+  @year-bar-w: 100px;
+
+  @media screen and (max-width: 640px) {
+    @year-bar-w: 50px;
+  }
+
   @{s}__ctn {
     @{s} {
       width: 100%;
@@ -153,7 +159,6 @@ export default {
       flex-flow: row nowrap;
       justify-content: center;
 
-      @year-bar-w: 100px;
       @year-bar-h: 10px;
 
       &@{s}--barCharts {
@@ -243,6 +248,19 @@ export default {
           padding: @padding-y 0;
 
           @{s}__dragpoint {
+
+            cursor: move; /* fallback if grab cursor is unsupported */
+            cursor: grab;
+            cursor: -moz-grab;
+            cursor: -webkit-grab;
+
+            /* (Optional) Apply a "closed-hand" cursor during drag operation. */
+            &:active {
+              cursor: grabbing !important;
+              cursor: -moz-grabbing !important;
+              cursor: -webkit-grabbing !important;
+            }
+
             @bigger-wh: 8px;
             text-align: center;
             font-family: Arial;
@@ -264,7 +282,7 @@ export default {
         }
       }
 
-      &@{s}--barCtn { 
+      &@{s}--barCtn {
         box-shadow: 0 6px 15px -2px #b2cce2;
       }
       @{s}__bar {
@@ -311,7 +329,6 @@ export default {
           &:first-child { border-radius: 5px 0 0 5px; }
           &:last-child { border-radius: 0 5px 5px 0; }
         }
-
       }
     }
   }

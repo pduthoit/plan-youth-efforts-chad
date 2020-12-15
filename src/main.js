@@ -14,6 +14,8 @@ Vue.prototype.$COLORS = {
 let categories = Object.keys(store.state.categories)
 var data = [];
 
+store.dispatch('getData')
+
 for (let i = 0; i < 200; i++) {
   var coord_x = Math.random() + 14;
   var coord_y = Math.random() + 12;

@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import * as Axios from 'axios'
 
 Vue.use(Vuex);
 
@@ -55,5 +56,48 @@ export default new Vuex.Store({
         );
       }
     }
+  },
+
+  actions: {
+    async getData(context){
+      try {
+        // GET KOBO DATA
+        const URL = "https://kobo.humanitarianresponse.info/api/v2/assets/auuqbU6tqVsjCbaNVq26wo/data.json"
+        const koboReqOptions = {
+          method: 'get',
+          url: URL,
+          params: { format: 'json' },
+          headers: { Authorization: `Token 85e323199cf8f7c19cd7d9b5e22e69f5235f3c2b` }
+        }
+        const koboRes = await Axios(koboReqOptions)
+        // let data = {}
+
+        // let dataRow = {
+        //   coords: [coord_x, coord_y],
+        //   year: year,
+        //   icon: category,
+        //   label: 'This is a label',
+        //   description: 'Phasellus ac eros ligula. In congue diam'
+        // };
+
+        for (let d of koboRes.data.results) {
+          console.log(d)
+          // if (data[d['group_general_info/site']] ) {
+          //   if (new Date(data[d['group_general_info/site']]._submission_time) < new Date(d._submission_time)) {
+          //     data[d['group_general_info/site']] = d
+          //   }
+          // } else {
+          //   data[d['group_general_info/site']] = d
+          // }
+        }
+        // this.state.submissions = data;
+        
+      } catch (e) {
+        context.commit("setDataLoadingError", e)
+      }
+    }
   }
 });
+
+
+

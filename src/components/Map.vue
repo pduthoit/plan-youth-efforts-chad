@@ -69,7 +69,7 @@ export default {
         });
       });
     },
-    getMapFilter: function (category) { 
+    getMapFilter: function (category) {
       return [
         'all',
         ['>=', 'year', this.$store.state.minYearFilter + this.$store.state.minYearShown - 1],
@@ -94,7 +94,6 @@ export default {
 
       var geojson = [];
       Array.prototype.forEach.call(this.$DATA , function(line) {
-        console.log(line)
         geojson.push({
           'type': 'Feature',
           'properties': {
@@ -111,6 +110,13 @@ export default {
       })
 
 
+      var labelPopup = new mapboxgl.Popup({
+        closeButton: false,
+        offset: 28,
+        className: 'LabelPopup'
+      })
+      var labelPopupFeature = "";
+
       var places = {
         'type': 'FeatureCollection',
         'features': geojson
@@ -123,7 +129,7 @@ export default {
       places.features.forEach(function (feature) {
         var symbol = feature.properties['icon'];
         var layerID = 'poi-' + symbol;
-        
+
         // Add a layer for this symbol type if it hasn't been added already.
         if (!map.getLayer(layerID)) {
           map.addLayer({
@@ -140,7 +146,25 @@ export default {
           },
             'filter': self.getMapFilter(symbol)
           });
+
+          map.on('mouseenter', layerID, (e) => {
+            if (labelPopupFeature != e.features[0]) labelPopup.remove();
+            map.getCanvas().style.cursor = 'pointer';
+            var coordinates = e.features[0].geometry.coordinates.slice();
+            labelPopup
+              .setLngLat(coordinates)
+              .setHTML(e.features[0].properties.label)
+              .addTo(map);
+
+            labelPopupFeature = e.features[0];
+          })
+          map.on('mouseleave', layerID, () => {
+            map.getCanvas().style.cursor = ''
+            labelPopup.remove();
+          })
+
           map.on('click', layerID, function (e) {
+            labelPopup.remove();
             var coordinates = e.features[0].geometry.coordinates.slice();
             var image = '<div class="Image" style="background-image: url(https://www.plan-international.fr/sites/default/files/styles/blog_index/public/field/field_image_listing/appel_a_projets.jpg?itok=z-hc_lGo);"></div>';
             var infrastructure = '<h3>' + e.features[0].properties.label + '</h3>'
@@ -155,7 +179,7 @@ export default {
               coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
             }
 
-            new mapboxgl.Popup()
+            new mapboxgl.Popup({offset: 30})
               .setLngLat(coordinates)
               .setHTML(image + infrastructure + subtype + description)
               .addTo(map);
@@ -166,27 +190,6 @@ export default {
               essential: true
             });
           });
-          
-          // Add checkbox and label elements for the layer.
-          // var input = document.createElement('input');
-          // input.type = 'checkbox';
-          // input.id = layerID;
-          // input.checked = true;
-          // filterGroup.appendChild(input);
-          
-          // var label = document.createElement('label');
-          // label.setAttribute('for', layerID);
-          // label.textContent = symbol;
-          // filterGroup.appendChild(label);
-          
-          // When the checkbox changes, update the visibility of the layer.
-          // input.addEventListener('change', function (e) {
-          //   map.setLayoutProperty(
-          //     layerID,
-          //     'visibility',
-          //     e.target.checked ? 'visible' : 'none'
-          //   );
-          // });
         }
       });
       
@@ -214,10 +217,46 @@ export default {
 .mapboxgl-popup {
   z-index: 3;
 }
+
+.LabelPopup {
+  background: none;
+  box-shadow: none !important;
+  max-width: 160px;
+
+  & > * {
+    background: none;
+    border: none;
+    box-shadow: none !important;
+    font-family: @font-primary;
+    font-size: 1.2em;
+    color: #444;
+  }
+
+  .mapboxgl-popup-content {
+    animation: showLabel .15s ease-in forwards;
+    opacity: 0;
+    transform: translateY(5px);
+    background: rgba(255,255,255,0.9);
+    padding: 1px 6px;
+    border-radius: @rad-box;
+  }
+}
+
+@keyframes showLabel {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .mapboxgl-popup-content {
   padding: 0;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: @rad-box;
   box-shadow: 0 5px 21px -3px rgb(178 204 226);
 
   h3 {

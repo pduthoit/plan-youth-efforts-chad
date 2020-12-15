@@ -120,4 +120,53 @@ export default {
       z-index: 2;
     }
   }
+
+  @media screen and (max-width: 640px) {
+    #geoapp {
+      &::before {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 1), transparent);
+        height: 25vh;
+      }
+
+      .Sponsors {
+        display: none;
+      }
+      .Title {
+        margin: 15px;
+        align-items: flex-start;
+
+        h1 {
+          margin-top: 0;
+          font-size: 1.5em;
+        }
+
+        .Translator .Translator__list {
+          margin: 0;
+          .Translator__item {
+            font-size: 0.7em;
+          }
+        }
+      }
+
+      .mapboxgl-ctrl-top-right {
+        top: 32px;
+      }
+
+      .Label::before {
+        content: none !important;
+      }
+
+      .Legend .Legend__item input[type='checkbox'] + label > .Label {
+        font-size: 0.85em;
+        padding: 0 6px;
+      }
+      .Legend .Legend__item input[type='checkbox'] + label .Image {
+        padding: 8px 8px 4px 8px;
+
+        img {
+          width: 14px;
+        }
+      }
+    }
+  }
 </style>
