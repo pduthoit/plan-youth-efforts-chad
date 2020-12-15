@@ -1,5 +1,5 @@
 <template>
-  <div class="YR__ctn">
+  <div class="YR__ctn" v-if="$store.state.submissions">
     <div class="YR YR--barCharts">
       <div
         class="YR__barChart"
@@ -86,17 +86,6 @@ export default {
   methods: {
     checkMove: function(evt){
       return (evt.relatedContext.list.length < 1);
-    },
-    add: function() {
-      this.years.push({ name: "Juan" });
-    },
-    replace: function() {
-      this.years = [{ name: "Edgard" }];
-    },
-    clone: function(el) {
-      return {
-        name: el.name + " cloned"
-      };
     },
     log: function() {
       let min = null, max = null;

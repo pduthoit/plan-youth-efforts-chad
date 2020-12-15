@@ -1,5 +1,5 @@
 <template>
-  <div id="map">
+  <div id="map" v-if="$store.state.submissions">
     <mapbox
       access-token="pk.eyJ1IjoicGxjYXJ0b25nIiwiYSI6ImNrN25pbTN4bDAycXEzZnM4a212M3k1dWkifQ.mfCBz7pz5g7ykUXaeNy13A"
       :map-options="{
@@ -17,6 +17,7 @@
 
 <script>
 import Mapbox from 'mapbox-gl-vue'
+import * as Axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl'
  console.log(mapboxgl)
@@ -25,6 +26,11 @@ export default {
   components: { Mapbox },
   props: {
     // msg: String
+  },
+  data: function() {
+    return {
+      popupSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+    }
   },
   computed: {
     lang: function () {
@@ -55,14 +61,15 @@ export default {
       }
     },
     loaded(map) {
+      console.log("loaded here ")
       this.showIcons(map)
       window.addEventListener('resize', () => {
         map.resize()
       });
       setTimeout(function () {
         map.flyTo({
-          center: [14.5, 12.5],
-          zoom: 8.3,
+          center: [25, 12.5],
+          zoom: 4,
           speed: 1,
           essential: true,
           bearing: 0
@@ -80,6 +87,20 @@ export default {
     translate: function () {
       this.$store.state.map.setLayoutProperty('country-label', 'text-field', ['get', 'name_' + this.$store.state.lang]);
     },
+    getBase64: async function (url) {
+      const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
+      const koboImgUrl = "https://kc.humanitarianresponse.info/attachment/original?media_file=audemd/attachments/";
+      let fullUrl = PROXY_FOR_CORS + koboImgUrl + url;
+      console.log(fullUrl)
+      const koboReqOptions = {
+        method: 'get',
+        url: fullUrl,
+        headers: { Authorization: `Token 85e323199cf8f7c19cd7d9b5e22e69f5235f3c2b` },
+        responseType: 'arraybuffer'
+      }
+      const koboRes = await Axios(koboReqOptions)
+      return koboRes;
+    },
     showIcons: function (map) {
       for (let key in this.$store.state.categories) {
         var path = require('../assets/img/icons/' + key + '.png');
@@ -94,13 +115,15 @@ export default {
 
       var geojson = [];
       Array.prototype.forEach.call(this.$DATA , function(line) {
+        console.log(line)
         geojson.push({
           'type': 'Feature',
           'properties': {
             'year': line.year,
             'icon': line.icon,
             'label': line.label,
-            'description': line.description
+            'description': line.description,
+            'image': line.image,
           },
           'geometry': {
           'type': 'Point',
@@ -166,7 +189,24 @@ export default {
           map.on('click', layerID, function (e) {
             labelPopup.remove();
             var coordinates = e.features[0].geometry.coordinates.slice();
-            var image = '<div class="Image" style="background-image: url(https://www.plan-international.fr/sites/default/files/styles/blog_index/public/field/field_image_listing/appel_a_projets.jpg?itok=z-hc_lGo);"></div>';
+            console.log(e.features[0].properties.image)
+            let img64 = self.getBase64(e.features[0].properties.image).then(function(results) {
+              console.log(results)
+              // var image = new Image();
+              let base64 = "data:image/jpg;base64," + Buffer.from(results.data, 'binary').toString('base64').replace(/(\r\n|\n|\r)/gm, "");
+              // base64 = base64.replace(/\+/g, '%2B');
+              // //eslint-disable-next-line
+              // base64 = base64.replace(/\//g, '%2F');
+              // //eslint-disable-next-line
+              // base64 = base64.replace(/\=/g, '%3D');
+              // image.src = base64;
+              // console.log(image.src)
+              let imageHtml = document.getElementsByClassName('Image')[0];
+              imageHtml.style.backgroundImage = "url('" + base64 + "')";
+            });
+            console.log(img64)
+            var image = '<div class="Image"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
+            // var image = '<div class="Image" style="background-image: url(https://www.plan-international.fr/sites/default/files/styles/blog_index/public/field/field_image_listing/appel_a_projets.jpg?itok=z-hc_lGo);"></div>';
             var infrastructure = '<h3>' + e.features[0].properties.label + '</h3>'
             let icon = e.features[0].properties.icon;
             var subtype = '<span class="subtype ' + icon + '" style="background:' + self.$store.state.categories[icon].color + '">' + icon + '</span>'
@@ -216,12 +256,14 @@ export default {
 }
 .mapboxgl-popup {
   z-index: 3;
+  min-width: 240px;
 }
 
 .LabelPopup {
   background: none;
   box-shadow: none !important;
   max-width: 160px;
+  min-width: inherit;
 
   & > * {
     background: none;
@@ -265,11 +307,22 @@ export default {
     font-weight: 100;
   }
   .Image {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     height: 140px;
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
+    background: #ddd;
+
+    &[style] {
+      .lds-ring {
+        display: none;
+      }
+    }
 
     & ~ * {
       margin: 10px;
@@ -290,4 +343,42 @@ export default {
     outline: none;
   }
 }
+.lds-ring {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+  transform-origin: center center;
+  transform: scale(0.6);
+}
+.lds-ring div {
+  box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  margin: 8px;
+  border: 8px solid #fff;
+  border-radius: 50%;
+  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: #fff transparent transparent transparent;
+}
+.lds-ring div:nth-child(1) {
+  animation-delay: -0.45s;
+}
+.lds-ring div:nth-child(2) {
+  animation-delay: -0.3s;
+}
+.lds-ring div:nth-child(3) {
+  animation-delay: -0.15s;
+}
+@keyframes lds-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 </style>
