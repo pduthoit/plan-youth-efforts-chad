@@ -16,6 +16,7 @@
 </template>
 
 <script>
+import { words } from '@/constants/lang'
 import Mapbox from 'mapbox-gl-vue'
 import * as Axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -29,6 +30,9 @@ export default {
       return this.$store.state.lang
     }
   },
+  data: () => ({
+    words
+  }),
   watch: {
     '$store.state.lang': function() {
       this.translate()
@@ -191,7 +195,7 @@ export default {
             // var image = '<div class="Image" style="background-image: url(https://www.plan-international.fr/sites/default/files/styles/blog_index/public/field/field_image_listing/appel_a_projets.jpg?itok=z-hc_lGo);"></div>';
             var infrastructure = '<h3>' + e.features[0].properties.label + '</h3>'
             let icon = e.features[0].properties.icon;
-            var subtype = '<span class="subtype ' + icon + '" style="background:' + self.$store.state.categories[icon].color + '">' + icon + '</span>'
+            var subtype = '<span class="subtype ' + icon + '" style="background:' + self.$store.state.categories[icon].color + '">' + words[self.$store.state.lang].category[icon] + '</span>'
 
             var description = "";
             if (e.features[0].properties.description !== undefined) {

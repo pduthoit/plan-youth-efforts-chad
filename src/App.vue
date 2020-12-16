@@ -162,7 +162,6 @@ export default {
 
     .Sponsors {
       z-index: 2;
-      transform: scale(0.7);
       transform-origin: bottom right;
     }
     .Legend {
@@ -211,16 +210,19 @@ export default {
       .Label::before {
         content: none !important;
       }
+      .Legend {
+        margin-bottom: 10px;
 
-      .Legend .Legend__item input[type='checkbox'] + label > .Label {
-        font-size: 0.85em;
-        padding: 0 6px;
-      }
-      .Legend .Legend__item input[type='checkbox'] + label .Image {
-        padding: 8px 8px 4px 8px;
+        .Legend__item input[type='checkbox'] + label > .Label {
+          font-size: 0.85em;
+          padding: 0 6px;
+        }
+        .Legend__item input[type='checkbox'] + label .Image {
+          padding: 8px 8px 4px 8px;
 
-        img {
-          width: 14px;
+          img {
+            width: 14px;
+          }
         }
       }
     }

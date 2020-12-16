@@ -20,9 +20,6 @@ export default {
   data: () => ({
     words
   }),
-  props: {
-    // msg: String
-  },
   methods: {
     updateFilter(category) {
       this.$store.commit("toggleMapLayerState", category)
