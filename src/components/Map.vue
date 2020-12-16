@@ -154,7 +154,7 @@ export default {
             'source': 'places',
             'layout': {
             'icon-image': symbol,
-            'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.2, 3, 0.3, 5, 0.3, 8, 0.4],
+            'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.25, 3, 0.35, 5, 0.35, 8, 0.45],
             'icon-allow-overlap': true,
             // 'text-field': ['get', 'label'],
             // 'text-size': 10,
