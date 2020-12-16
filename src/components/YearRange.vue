@@ -3,7 +3,7 @@
     <div class="YR YR--barCharts">
       <div
         class="YR__barChart"
-        v-for="(element, index) in this.data"
+        v-for="(element, index) in $store.state.YEAR_DATA"
         :data-active="((index - $store.state.minYearShown + 1) >= $store.state.minYearFilter) && ((index - $store.state.minYearShown + 1) < $store.state.maxYearFilter)"
         :data-key="index"
         :key="index"
@@ -13,27 +13,35 @@
           :data-cat="key"
           :data-count="yearCatRow.count"
           :data-show="$store.state.categories[key].shown"
-          :style="'height: '+ (yearCatRow.count / maxCount) * 100 +'%; background: '+ $store.state.categories[key].color +';'"
-          v-for="(yearCatRow, key) in data[index]" :key="key">
+          :style="'height: '+ (yearCatRow.count / $store.state.MAX_COUNT) * 100 +'%; background: '+ $store.state.categories[key].color +';'"
+          v-for="(yearCatRow, key) in $store.state.YEAR_DATA[index]" :key="key">
         </div>
       </div>
+      <div class="YR__barChart"></div>
     </div>
     <div class="YR YR--draglist">
-      <draggable class="YR__dragzone" :move="checkMove" :list="element" group="people" @change="log(minYearShown)" v-for="(element, index) in this.years" :key="index">
+      <draggable
+        class="YR__dragzone"
+        :move="checkMove"
+        @change="log($store.state.minYearShown)"
+        v-for="(element, index) in this.years"
+        :key="index"
+        :list="element"
+        group="people">
         <div
           class="YR__dragpoint"
           v-for="(el) in element"
+          :data-key="el.index"
           :key="el.index"
         >lll</div>
       </draggable>
-      <rawDisplayer class="col-3" :value="years" title="List 1" />
     </div>
     <div class="YR YR--barCtn">
       <div
         class="YR__bar "
-        :data-active="((index) >= $store.state.minYearFilter) && ((index) < $store.state.maxYearFilter)" v-for="index in yearsCount"
+        :data-active="(index >= $store.state.minYearFilter) && (index < $store.state.maxYearFilter)" v-for="index in this.$store.state.yearsCount + 1"
         :key="index"
-        :data-year="minYearShown + index - 1"></div>
+        :data-year="+$store.state.minYearShown + index - 1"></div>
     </div>
   </div>
 </template>
@@ -49,47 +57,41 @@ export default {
   props: {
     msg: String
   },
-  watch: {
-  },
   data() {
     return {
-      yearsCount: this.$store.state.yearsCount,
       years: null,
       maxYearFilter: this.$store.state.defaultMaxYearFilter,
       minYearFilter: this.$store.state.defaultMinYearFilter,
-      data: this.$YEAR_DATA,
-      maxCount: this.$MAX_COUNT
+      data: this.$store.state.YEAR_DATA,
+      maxCount: this.$store.state.MAX_COUNT
     };
   },
-  created: function() {
-    this.years = this.initYearsData()
+  watch: {
+    '$store.state.submissions': function() {
+      this.years = this.initYearsData()
+    }
   },
   computed: {
-    maxByActiveCatAndYear: function () {
-      return this.maxYearFilter - this.minYearFilter
-    },
     delta: function () {
       return this.maxYearFilter - this.minYearFilter
     },
     minYearShown: function () {
-      let minYearShown = this.$store.state.defaultMinYearFilter - this.minYear;
-      this.$store.commit('updateMinYearShown', minYearShown)
-      return minYearShown
+      return this.$store.state.minYearShown
     },
-    minYear: function () {
-      return Math.floor(this.yearsCount / 2 - this.delta);
-    },
-    maxYear: function () {
-      return this.yearsCount - Math.ceil(this.yearsCount / 2 - this.delta)
-    }
+    // minYear: function () {
+    //   return Math.floor(this.$store.state.yearsCount / 2 - this.delta);
+    // },
+    // maxYear: function () {
+    //   return this.$store.state.yearsCount - Math.ceil(this.$store.state.yearsCount / 2 - this.delta)
+    // }
   },
   methods: {
-    checkMove: function(evt){
+    checkMove: function(evt) {
       return (evt.relatedContext.list.length < 1);
     },
     log: function() {
       let min = null, max = null;
-      let index = this.minYear;
+      let index = 1;
       this.years.forEach(year => {
         if (min == null) {
           if (year.length) {
@@ -108,17 +110,17 @@ export default {
 
     initYearsData: function() {
       let years = [];
-      for (var step = 0, yearLoop = this.minYearShown; step < this.yearsCount; step++, yearLoop++) {
-        if (step < this.minYear) years.push([])
-        else if (step >= this.maxYear) years.push([])
+      for (var step = 1, yearLoop = this.$store.state.minYearShown; step <= this.$store.state.yearsCount + 1; step++, yearLoop++) {
+        if (step < this.$store.state.minYearFilter) years.push([])
+        else if (step > this.$store.state.maxYearFilter) years.push([])
         else {
-          if (yearLoop === this.$store.state.minYearFilter) {
+          if (step === this.$store.state.minYearFilter) {
             years.push([{ type: "from", id: 1, year: yearLoop }])
-            this.$store.commit('updateMinYearFilter', step + 1)
+            this.$store.commit('updateMinYearFilter', step)
           }
-          else if (yearLoop === this.$store.state.maxYearFilter) {
+          else if (step === this.$store.state.maxYearFilter) {
             years.push([{ type: "to", id: 2, year: yearLoop }])
-            this.$store.commit('updateMaxYearFilter', step + 1)
+            this.$store.commit('updateMaxYearFilter', step)
           }
           else years.push([])
         }

@@ -24,14 +24,6 @@ import mapboxgl from 'mapbox-gl'
 export default {
   name: 'Map',
   components: { Mapbox },
-  props: {
-    // msg: String
-  },
-  data: function() {
-    return {
-      popupSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-    }
-  },
   computed: {
     lang: function () {
       return this.$store.state.lang
@@ -61,14 +53,13 @@ export default {
       }
     },
     loaded(map) {
-      console.log("loaded here ")
       this.showIcons(map)
       window.addEventListener('resize', () => {
         map.resize()
       });
       setTimeout(function () {
         map.flyTo({
-          center: [25, 12.5],
+          center: [8, 7],
           zoom: 4,
           speed: 1,
           essential: true,
@@ -79,8 +70,8 @@ export default {
     getMapFilter: function (category) {
       return [
         'all',
-        ['>=', 'year', this.$store.state.minYearFilter + this.$store.state.minYearShown - 1],
-        ['<', 'year', this.$store.state.maxYearFilter + this.$store.state.minYearShown - 1]
+        ['>=', 'year', this.$store.state.minYearFilter + +this.$store.state.minYearShown - 1],
+        ['<', 'year', this.$store.state.maxYearFilter + +this.$store.state.minYearShown - 1]
         ,['==', 'icon', category]
       ];
     },
@@ -89,13 +80,12 @@ export default {
     },
     getBase64: async function (url) {
       const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
-      const koboImgUrl = "https://kc.humanitarianresponse.info/attachment/original?media_file=audemd/attachments/";
+      const koboImgUrl = "https://kc.humanitarianresponse.info/attachment/medium?media_file=" + this.$store.state.KOBO_USERNAME + "/attachments/";
       let fullUrl = PROXY_FOR_CORS + koboImgUrl + url;
-      console.log(fullUrl)
       const koboReqOptions = {
         method: 'get',
         url: fullUrl,
-        headers: { Authorization: `Token 85e323199cf8f7c19cd7d9b5e22e69f5235f3c2b` },
+        headers: { Authorization: this.$store.state.AUTH_TOKEN },
         responseType: 'arraybuffer'
       }
       const koboRes = await Axios(koboReqOptions)
@@ -114,8 +104,7 @@ export default {
       }
 
       var geojson = [];
-      Array.prototype.forEach.call(this.$DATA , function(line) {
-        console.log(line)
+      Array.prototype.forEach.call(this.$store.state.submissions , function(line) {
         geojson.push({
           'type': 'Feature',
           'properties': {
@@ -189,28 +178,25 @@ export default {
           map.on('click', layerID, function (e) {
             labelPopup.remove();
             var coordinates = e.features[0].geometry.coordinates.slice();
-            console.log(e.features[0].properties.image)
-            let img64 = self.getBase64(e.features[0].properties.image).then(function(results) {
-              console.log(results)
-              // var image = new Image();
-              let base64 = "data:image/jpg;base64," + Buffer.from(results.data, 'binary').toString('base64').replace(/(\r\n|\n|\r)/gm, "");
-              // base64 = base64.replace(/\+/g, '%2B');
-              // //eslint-disable-next-line
-              // base64 = base64.replace(/\//g, '%2F');
-              // //eslint-disable-next-line
-              // base64 = base64.replace(/\=/g, '%3D');
-              // image.src = base64;
-              // console.log(image.src)
-              let imageHtml = document.getElementsByClassName('Image')[0];
-              imageHtml.style.backgroundImage = "url('" + base64 + "')";
-            });
-            console.log(img64)
-            var image = '<div class="Image"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
+            var image = "";
+            if (e.features[0].properties.image !== undefined) {
+              self.getBase64(e.features[0].properties.image).then(function(results) {
+                let base64 = "data:image/jpg;base64," + Buffer.from(results.data, 'binary').toString('base64').replace(/(\r\n|\n|\r)/gm, "");
+                let imageHtml = document.getElementsByClassName('Image')[0];
+                imageHtml.style.backgroundImage = "url('" + base64 + "')";
+              });
+
+              image = '<div class="Image"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
+            }
             // var image = '<div class="Image" style="background-image: url(https://www.plan-international.fr/sites/default/files/styles/blog_index/public/field/field_image_listing/appel_a_projets.jpg?itok=z-hc_lGo);"></div>';
             var infrastructure = '<h3>' + e.features[0].properties.label + '</h3>'
             let icon = e.features[0].properties.icon;
             var subtype = '<span class="subtype ' + icon + '" style="background:' + self.$store.state.categories[icon].color + '">' + icon + '</span>'
-            var description = '<p>' + e.features[0].properties.description + '</p>';
+
+            var description = "";
+            if (e.features[0].properties.description !== undefined) {
+              description = '<p>' + e.features[0].properties.description + '</p>';
+            }
 
             // Ensure that if the map is zoomed out such that multiple
             // copies of the feature are visible, the popup appears
@@ -232,7 +218,7 @@ export default {
           });
         }
       });
-      
+
       this.$store.commit('updateMap', map)
     }
   }
@@ -305,6 +291,7 @@ export default {
     font-family: @font-primary;
     font-size: 1.6em;
     font-weight: 100;
+    margin: 10px;
   }
   .Image {
     display: flex;
@@ -313,10 +300,10 @@ export default {
     align-items: center;
     width: 100%;
     height: 140px;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background: #ddd;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    background-color: #ddd;
 
     &[style] {
       .lds-ring {
@@ -333,6 +320,11 @@ export default {
     padding: 3px 6px;
     border-radius: 5px;
     color: white;
+    margin: 10px;
+  }
+
+  p {
+    margin: 10px;
   }
 
   .mapboxgl-popup-close-button {

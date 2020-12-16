@@ -12,7 +12,6 @@
 </template>
 
 <script>
-import Vue from 'vue'
 import { words } from '@/constants/lang'
 import Map from './components/Map.vue'
 import Translator from './components/Translator.vue'
@@ -51,7 +50,6 @@ export default {
       //   data.push(dataRow);
       // }
       let data = this.$store.state.submissions
-      console.log(data)
       var yearCount = {};
       let catArr = {};
       let yearsList = [...new Set(data.map(item => item.year))];
@@ -70,16 +68,14 @@ export default {
         }
       }
 
-      Vue.prototype.$MAX_COUNT = maxCount;
-      Vue.prototype.$YEAR_DATA = yearCount;
-      Vue.prototype.$DATA = data;
+      this.$store.commit('updateYearsData', yearCount)
+      this.$store.state.MAX_COUNT = maxCount;
     },
   },
   data: () => ({
     words
   }),
   mounted(){
-    console.log("running")
     this.$store.dispatch('getData')
   }
 }
@@ -141,19 +137,26 @@ export default {
       margin: 30px 50px;
       top: 0;
       position: absolute;
+      pointer-events: none;
+      user-select: none;
 
       h1 {
         font-size: 1.8em;
+
         text-transform: uppercase;
         color: @color-primary;
         font-weight: 300;
 
         &, * {
+          pointer-events: none;
+          user-select: none;
           font-family: @font-primary;
         }
       }
       .Translator {
         z-index: 1;
+        pointer-events: initial;
+        // user-select: none;
       }
     }
 
@@ -165,9 +168,11 @@ export default {
     .Legend {
       align-self: flex-start;
       margin-left: 15px;
+      z-index: 2;
     }
     .YR__ctn {
-      margin: 20px 30px 85px 30px;
+      align-self: flex-start;
+      margin: 30px 30px 60px 30px;
       z-index: 2;
     }
   }

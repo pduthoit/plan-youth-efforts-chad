@@ -3,7 +3,7 @@
     <div class="Legend__item" v-for="category in $store.state.categories" :key="category.icon">
       <input checked @click="updateFilter(category.icon)" type="checkbox" :id="'poi-' + category.icon">
         <label :for="'poi-' + category.icon">
-          <div class="Image" :style="'background-color:'+category.color">
+          <div class="Legend__image" :style="'background-color:'+category.color">
             <img :src="require('@/assets/img/icons/' + category.icon +'.svg')" alt=""/>
           </div>
           <div class="Label">{{ words[$store.state.lang].category[category.icon] }}</div>
@@ -78,7 +78,7 @@ export default {
           padding: 0 12px;
         }
 
-        .Image {
+        .Legend__image {
           padding: 11px 9px 7px 9px;
           img {
             width: 17px;
@@ -89,7 +89,7 @@ export default {
     * {
       transition: all .12s ease-in;
     }
-    input[type='checkbox']:not(:checked) + label > .Image {
+    input[type='checkbox']:not(:checked) + label > .Legend__image {
       background: #bbb !important;
     }
     input[type='checkbox']:checked + label {
