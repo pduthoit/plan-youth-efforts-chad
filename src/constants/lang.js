@@ -19,7 +19,7 @@ export const words = {
     },
     sponsors: {
       Eu: `Ce projet a été financé grâce à l'aide de l'Union Européenne`,
-      Cooperation: `Cette carte a été développé en collaboration avec l'AU-EU Youth Cooperation Hub`
+      Cooperation: `Cette carte a été développée en collaboration avec l'AU-EU Youth Cooperation Hub`
     },
     category: {
       'education': `Éducation`,

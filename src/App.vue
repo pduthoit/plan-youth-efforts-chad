@@ -1,13 +1,16 @@
 <template>
-  <div id="geoapp">
-    <div class="Title">
-      <h1 v-html="this.words[this.$store.state.lang].general.Title"></h1>
-      <Translator/>
+  <div class="App">
+    <div id="geoapp" :class="!$store.state.mapLoaded ? 'Blur' : ''">
+      <div class="Title">
+        <h1 v-html="this.words[this.$store.state.lang].general.Title"></h1>
+        <Translator/>
+      </div>
+      <Map/>
+      <Legend/>
+      <YearRange/>
+      <Sponsors/>
     </div>
-    <Map/>
-    <Legend/>
-    <YearRange/>
-    <Sponsors/>
+    <Loader/>
   </div>
 </template>
 
@@ -15,6 +18,7 @@
 import { words } from '@/constants/lang'
 import Map from './components/Map.vue'
 import Translator from './components/Translator.vue'
+import Loader from './components/Loader.vue'
 import Legend from './components/Legend.vue'
 import YearRange from './components/YearRange.vue'
 import Sponsors from './components/Sponsors.vue'
@@ -25,6 +29,7 @@ export default {
     Map,
     Legend,
     YearRange,
+    Loader,
     Translator,
     Sponsors
   },
@@ -97,7 +102,9 @@ export default {
     top: 0;
     left: 0;
   }
-
+  .App {
+    height: 100%;
+  }
   #geoapp {
     height: 100%;
     display: flex;
@@ -105,6 +112,10 @@ export default {
     align-items: center;
     justify-content: flex-end;
     overflow: hidden;
+
+    &.Blur {
+      filter: blur(10px);
+    }
 
     &::before {
       content: "";
@@ -128,7 +139,7 @@ export default {
       background: linear-gradient(0deg, rgba(255,255,255,.7), transparent);
       z-index: 1;
     }
-    
+
     .Title {
       display: flex;
       flex-flow: row nowrap;

@@ -57,19 +57,20 @@ export default {
       }
     },
     loaded(map) {
+      this.$store.commit('updateMapLoaded')
       this.showIcons(map)
       window.addEventListener('resize', () => {
         map.resize()
       });
       setTimeout(function () {
         map.flyTo({
-          center: [8, 7],
+          center: [8, 12],
           zoom: 4,
-          speed: 1,
+          speed: 0.7,
           essential: true,
           bearing: 0
         });
-      });
+      }, 300);
     },
     getMapFilter: function (category) {
       return [
@@ -110,12 +111,13 @@ export default {
       var geojson = [];
       Array.prototype.forEach.call(this.$store.state.submissions , function(line) {
         geojson.push({
-          'type': 'Feature',
+          // 'type': 'Feature',
           'properties': {
             'year': line.year,
             'icon': line.icon,
             'label': line.label,
-            'description': line.description,
+            'type_en': line.type.en,
+            'type_fr': line.type.fr,
             'image': line.image,
           },
           'geometry': {
@@ -155,10 +157,7 @@ export default {
             'layout': {
             'icon-image': symbol,
             'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.25, 3, 0.35, 5, 0.35, 8, 0.45],
-            'icon-allow-overlap': true,
-            // 'text-field': ['get', 'label'],
-            // 'text-size': 10,
-            // 'text-variable-anchor': ['top', 'bottom', 'left', 'right']
+            'icon-allow-overlap': true
           },
             'filter': self.getMapFilter(symbol)
           });
@@ -192,14 +191,16 @@ export default {
 
               image = '<div class="Image"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
             }
-            // var image = '<div class="Image" style="background-image: url(https://www.plan-international.fr/sites/default/files/styles/blog_index/public/field/field_image_listing/appel_a_projets.jpg?itok=z-hc_lGo);"></div>';
             var infrastructure = '<h3>' + e.features[0].properties.label + '</h3>'
             let icon = e.features[0].properties.icon;
             var subtype = '<span class="subtype ' + icon + '" style="background:' + self.$store.state.categories[icon].color + '">' + words[self.$store.state.lang].category[icon] + '</span>'
 
-            var description = "";
-            if (e.features[0].properties.description !== undefined) {
-              description = '<p>' + e.features[0].properties.description + '</p>';
+            var type = "", lang = self.$store.state.lang;
+
+            if (e.features[0].properties['type_' + lang] != 'null') {
+              type = '<p>' + e.features[0].properties['type_' + lang] + '</p>';
+            } else if (e.features[0].properties['type_en'] != 'null') {
+              type = '<p>' + e.features[0].properties['type_en'] + '</p>';
             }
 
             // Ensure that if the map is zoomed out such that multiple
@@ -211,7 +212,7 @@ export default {
 
             new mapboxgl.Popup({offset: 30})
               .setLngLat(coordinates)
-              .setHTML(image + infrastructure + subtype + description)
+              .setHTML(image + infrastructure + subtype + type)
               .addTo(map);
 
             map.flyTo({

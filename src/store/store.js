@@ -16,7 +16,9 @@ export default new Vuex.Store({
     YEAR_DATA: null,
     MAX_COUNT: null,
     submissions: null,
+    translations: null,
     map: null,
+    mapLoaded: false,
     lang: 'en',
     minYearShown: null,
     yearsCount: 0,
@@ -38,8 +40,14 @@ export default new Vuex.Store({
     updateSubmissions (state, submissions) {
       state.submissions = submissions
     },
+    updateTranslations (state, translations) {
+      state.translations = translations
+    },
     updateMap (state, map) {
       state.map = map
+    },
+    updateMapLoaded (state) {
+      state.mapLoaded = true
     },
     updateLang (state, lang) {
       state.lang = lang
@@ -76,61 +84,83 @@ export default new Vuex.Store({
     async getData(){
       try {
         let data = []
-        for (const [form_uid] of Object.entries(this.state.FORMS_UID)) {
 
-          const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
-          const URL = "https://kobo.humanitarianresponse.info/api/v2/assets/" + this.state.FORMS_UID[form_uid] + "/data.json"
-
-          const koboReqOptions = {
-            method: 'get',
-            url: PROXY_FOR_CORS + URL,
-            params: { format: 'json' },
-            headers: { Authorization: this.state.AUTH_TOKEN }
-          }
-          const koboRes = await Axios(koboReqOptions)
-
-          let defaultRow = {
-            coords: [],
-            year: 1111,
-            icon: 'no category',
-            label: 'No label',
-            description: null,
-            image: 'no_image.png',
-          };
-
-          for (let d of koboRes.data.results) {
-            console.log(d)
-            let row = Object.assign({}, defaultRow)
-            row.year = +d.today.substring(0,4) + Math.floor(Math.random() * 2)
-            row.coords = d._geolocation
-
-            if (d.serviceType === "health") {
-              row.icon = d.serviceType
-              row.label = d['groupHealth/groupConsentHlt/nameHealth']
-              row.image = d['groupHealth/groupConsentHlt/pictureHealth']
-              row.description = d['groupHealth/groupConsentHlt/healthInstitution']
-            } else if (d.serviceType === "youthParticipation") {
-              row.icon = 'youth-organizations'
-              row.label = d['groupParticipation/groupConsentParticipation_001/nameyouthOrga']
-              row.image = d['groupParticipation/groupConsentParticipation_001/pictureYouthOrga']
-              row.description = d['groupParticipation/groupConsentParticipation_001/groupParticipationActivity/activities']
-            } else if (d.serviceType === "education") {
-              row.icon = d.serviceType
-              row.label = d['groupEducation/groupConsentEduc/nameEduc']
-              row.image = d['groupEducation/groupConsentEduc/pictureEduc']
-              row.description = d['groupEducation/groupConsentEduc/educationInstitution']
-            }
-            data.push(row)
-          }
+        const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
+        const TRANSLATION_URL = "https://kobo.humanitarianresponse.info/api/v2/assets/" + this.state.FORMS_UID.cameroon + "/deployment/";
+        const koboReqOptions = {
+          method: 'get',
+          url: PROXY_FOR_CORS + TRANSLATION_URL,
+          params: { format: 'json' },
+          headers: { Authorization: this.state.AUTH_TOKEN }
         }
+        await Axios(koboReqOptions).then(async (response) => {
+          let translations = {};
+          response.data.asset.content.choices.forEach(choice => {
+            let name = choice.name;
+            translations[name] = choice;
+          })
+          this.commit('updateTranslations', translations);
+
+          for (const [form_uid] of Object.entries(this.state.FORMS_UID)) {
+
+            const URL = "https://kobo.humanitarianresponse.info/api/v2/assets/" + this.state.FORMS_UID[form_uid] + "/data.json"
+
+            koboReqOptions.url = PROXY_FOR_CORS + URL
+            const koboRes = await Axios(koboReqOptions)
+
+            let defaultRow = {
+              coords: [],
+              year: 1111,
+              icon: 'no category',
+              label: 'No label',
+              description: null,
+              image: 'no_image.png',
+              type: {
+                en: null,
+                fr: null,
+              },
+            };
+
+            for (let d of koboRes.data.results) {
+              let row = Object.assign({}, defaultRow)
+              row.year = +d.today.substring(0,4) + Math.floor(Math.random() * 2)
+              row.coords = d._geolocation.reverse()
+              let type = ""
+              if (d.serviceType === "health") {
+                row.icon = d.serviceType
+                row.label = d['groupHealth/groupConsentHlt/nameHealth']
+                row.image = d['groupHealth/groupConsentHlt/pictureHealth']
+                type = d['groupHealth/groupConsentHlt/healthInstitution']
+              } else if (d.serviceType === "youthParticipation") {
+                row.icon = 'youth-organizations'
+                row.label = d['groupParticipation/groupConsentParticipation_001/nameyouthOrga']
+                row.image = d['groupParticipation/groupConsentParticipation_001/pictureYouthOrga']
+                type = d['groupParticipation/groupConsentParticipation_001/groupParticipationActivity/activities']
+              } else if (d.serviceType === "education") {
+                row.icon = d.serviceType
+                row.label = d['groupEducation/groupConsentEduc/nameEduc']
+                row.image = d['groupEducation/groupConsentEduc/pictureEduc']
+                type = d['groupEducation/groupConsentEduc/educationInstitution']
+              }
+              if (translations[type] != undefined) {
+                row.type.en = translations[type].label[0];
+                row.type.fr = translations[type].label[1];
+              } else {
+                row.type.en = type;
+                row.type.fr = type;
+              }
+
+              data.push(row)
+            }
+          }
+        });
+
         this.commit('updateSubmissions', data);
-      }catch (e) {
+
+      } catch (e) {
         console.log(e)
         // context.commit("setDataLoadingError", e)
       }
     }
   }
 });
-
-
-

@@ -301,7 +301,7 @@ export default {
           &::before {
             content: attr(data-year);
             position: absolute;
-            left: -8px;
+            left: calc(50% - 10px);
             top: calc(@year-tip + 5px);
             color: #666;
             font-family: Arial;
