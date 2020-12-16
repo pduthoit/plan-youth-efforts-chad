@@ -66,11 +66,11 @@ export default {
         map.flyTo({
           center: [8, 12],
           zoom: 4,
-          speed: 0.7,
+          speed: 0.6,
           essential: true,
           bearing: 0
         });
-      }, 300);
+      }, 250);
     },
     getMapFilter: function (category) {
       return [
