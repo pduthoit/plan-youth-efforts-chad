@@ -84,7 +84,8 @@ export default {
       this.$store.state.map.setLayoutProperty('country-label', 'text-field', ['get', 'name_' + this.$store.state.lang]);
     },
     getBase64: async function (url) {
-      const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
+      const PROXY_FOR_CORS = ""
+      // const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
       const koboImgUrl = "https://kc.humanitarianresponse.info/attachment/medium?media_file=" + this.$store.state.KOBO_USERNAME + "/attachments/";
       let fullUrl = PROXY_FOR_CORS + koboImgUrl + url;
       const koboReqOptions = {

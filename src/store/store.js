@@ -85,13 +85,16 @@ export default new Vuex.Store({
       try {
         let data = []
 
-        const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
+        const PROXY_FOR_CORS = ""
+        // const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
         const TRANSLATION_URL = "https://kobo.humanitarianresponse.info/api/v2/assets/" + this.state.FORMS_UID.cameroon + "/deployment/";
         const koboReqOptions = {
           method: 'get',
           url: PROXY_FOR_CORS + TRANSLATION_URL,
           params: { format: 'json' },
-          headers: { Authorization: this.state.AUTH_TOKEN }
+          headers: {
+            Authorization: this.state.AUTH_TOKEN
+          }
         }
         await Axios(koboReqOptions).then(async (response) => {
           let translations = {};
