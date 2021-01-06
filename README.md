@@ -1,4 +1,11 @@
-# less
+# Plan - Chad youth efforts
+
+## Push to prod
+```
+yarn build
+git add dist && git commit -m "[EDIT] Deployement commit"
+git subtree push --prefix dist origin dist
+```
 
 ## Project setup
 ```

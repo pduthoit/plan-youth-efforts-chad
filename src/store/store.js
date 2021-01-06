@@ -85,8 +85,8 @@ export default new Vuex.Store({
       try {
         let data = []
 
-        const PROXY_FOR_CORS = ""
-        // const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
+        // const PROXY_FOR_CORS = ""
+        const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
         const TRANSLATION_URL = "https://kobo.humanitarianresponse.info/api/v2/assets/" + this.state.FORMS_UID.cameroon + "/deployment/";
         const koboReqOptions = {
           method: 'get',
@@ -126,25 +126,25 @@ export default new Vuex.Store({
 
             for (let d of koboRes.data.results) {
               let row = Object.assign({}, defaultRow)
+              let type = ""
               row.year = +d.today.substring(0,4) + Math.floor(Math.random() * 2)
               row.coords = d._geolocation.reverse()
-              let type = ""
-              if (d.serviceType === "health") {
-                row.icon = d.serviceType
-                row.label = d['groupHealth/groupConsentHlt/nameHealth']
-                row.image = d['groupHealth/groupConsentHlt/pictureHealth']
-                type = d['groupHealth/groupConsentHlt/healthInstitution']
-              } else if (d.serviceType === "youthParticipation") {
+              row.label = d['groupConsent/groupMapDisplay/name']
+              row.image = d['groupConsent/groupMapDisplay/picture']
+              let serviceType = d['groupConsent/groupMapDisplay/serviceType']
+
+              if (serviceType === "health") {
+                row.icon = serviceType
+                type = d['groupConsent/groupMapDisplay/subTypeHlt']
+              } else if (serviceType === "youthParticipation") {
                 row.icon = 'youth-organizations'
-                row.label = d['groupParticipation/groupConsentParticipation_001/nameyouthOrga']
-                row.image = d['groupParticipation/groupConsentParticipation_001/pictureYouthOrga']
-                type = d['groupParticipation/groupConsentParticipation_001/groupParticipationActivity/activities']
-              } else if (d.serviceType === "education") {
-                row.icon = d.serviceType
-                row.label = d['groupEducation/groupConsentEduc/nameEduc']
-                row.image = d['groupEducation/groupConsentEduc/pictureEduc']
-                type = d['groupEducation/groupConsentEduc/educationInstitution']
+                type = d['groupConsent/groupMapDisplay/subTypeOrganization']
+              } else if (serviceType === "education") {
+                row.icon = serviceType
+                type = d['groupConsent/groupMapDisplay/subTypeEduc']
               }
+
+              // Handles translations
               if (translations[type] != undefined) {
                 row.type.en = translations[type].label[0];
                 row.type.fr = translations[type].label[1];
