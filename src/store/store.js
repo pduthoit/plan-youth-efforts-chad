@@ -109,56 +109,57 @@ export default new Vuex.Store({
             const URL = "https://kobo.humanitarianresponse.info/api/v2/assets/" + this.state.FORMS_UID[form_uid] + "/data.json"
 
             koboReqOptions.url = PROXY_FOR_CORS + URL
-            const koboRes = await Axios(koboReqOptions)
+            await Axios(koboReqOptions).then(async (response) => {
 
-            let defaultRow = {
-              coords: [],
-              year: 1111,
-              icon: 'no category',
-              label: 'No label',
-              description: null,
-              image: 'no_image.png',
-              type: {
-                en: null,
-                fr: null,
-              },
-            };
+              let defaultRow = {
+                coords: [],
+                year: 1111,
+                icon: 'no category',
+                label: 'No label',
+                description: null,
+                image: 'no_image.png',
+                type: {
+                  en: '',
+                  fr: '',
+                },
+              };
 
-            for (let d of koboRes.data.results) {
-              let row = Object.assign({}, defaultRow)
-              let type = ""
-              row.year = +d.today.substring(0,4) + Math.floor(Math.random() * 2)
-              row.coords = d._geolocation.reverse()
-              row.label = d['groupConsent/groupMapDisplay/name']
-              row.image = d['groupConsent/groupMapDisplay/picture']
-              let serviceType = d['groupConsent/groupMapDisplay/serviceType']
+              for (let d of response.data.results) {
+                let row = Object.assign({}, defaultRow)
+                let type = ""
+                row.year = +d.today.substring(0,4) + Math.floor(Math.random() * 2)
+                row.coords = d._geolocation.reverse()
+                row.label = d['groupConsent/groupMapDisplay/name']
+                row.image = d['groupConsent/groupMapDisplay/picture']
+                let serviceType = d['groupConsent/groupMapDisplay/serviceType']
 
-              if (serviceType === "health") {
-                row.icon = serviceType
-                type = d['groupConsent/groupMapDisplay/subTypeHlt']
-              } else if (serviceType === "youthParticipation") {
-                row.icon = 'youth-organizations'
-                type = d['groupConsent/groupMapDisplay/subTypeOrganization']
-              } else if (serviceType === "education") {
-                row.icon = serviceType
-                type = d['groupConsent/groupMapDisplay/subTypeEduc']
+                if (serviceType === "health") {
+                  row.icon = serviceType
+                  type = d['groupConsent/groupMapDisplay/subTypeHlt']
+                } else if (serviceType === "youthParticipation") {
+                  row.icon = 'youth-organizations'
+                  type = d['groupConsent/groupMapDisplay/subTypeOrganization']
+                } else if (serviceType === "education") {
+                  row.icon = serviceType
+                  type = d['groupConsent/groupMapDisplay/subTypeEduc']
+                }
+
+                // Handles translations
+                if (translations[type] != undefined) {
+                  row.type.en = translations[type].label[0];
+                  row.type.fr = translations[type].label[1];
+                } else {
+                  row.type.en = type;
+                  row.type.fr = type;
+                }
+
+                data.push(JSON.parse(JSON.stringify(row)))
               }
-
-              // Handles translations
-              if (translations[type] != undefined) {
-                row.type.en = translations[type].label[0];
-                row.type.fr = translations[type].label[1];
-              } else {
-                row.type.en = type;
-                row.type.fr = type;
-              }
-
-              data.push(row)
-            }
+            })
           }
         });
 
-        this.commit('updateSubmissions', data);
+        this.commit('updateSubmissions', JSON.parse(JSON.stringify(data)));
 
       } catch (e) {
         console.log(e)
