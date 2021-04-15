@@ -125,35 +125,39 @@ export default new Vuex.Store({
               };
 
               for (let d of response.data.results) {
-                let row = Object.assign({}, defaultRow)
-                let type = ""
-                row.year = +d.today.substring(0,4) + Math.floor(Math.random() * 2)
-                row.coords = d._geolocation.reverse()
-                row.label = d['groupConsent/groupMapDisplay/name']
-                row.image = d['groupConsent/groupMapDisplay/picture']
-                let serviceType = d['groupConsent/groupMapDisplay/serviceType']
+                // Show only validated submissions
+                if (d._validation_status.uid === 'validation_status_approved') {
 
-                if (serviceType === "health") {
-                  row.icon = serviceType
-                  type = d['groupConsent/groupMapDisplay/subTypeHlt']
-                } else if (serviceType === "youthParticipation") {
-                  row.icon = 'youth-organizations'
-                  type = d['groupConsent/groupMapDisplay/subTypeOrganization']
-                } else if (serviceType === "education") {
-                  row.icon = serviceType
-                  type = d['groupConsent/groupMapDisplay/subTypeEduc']
+                  let row = Object.assign({}, defaultRow)
+                  let type = ""
+                  row.year = +d.today.substring(0,4)
+                  row.coords = d._geolocation.reverse()
+                  row.label = d['groupConsent/groupMapDisplay/name']
+                  row.image = d['groupConsent/groupMapDisplay/picture']
+                  let serviceType = d['groupConsent/groupMapDisplay/serviceType']
+
+                  if (serviceType === "health") {
+                    row.icon = serviceType
+                    type = d['groupConsent/groupMapDisplay/subTypeHlt']
+                  } else if (serviceType === "youthParticipation") {
+                    row.icon = 'youth-organizations'
+                    type = d['groupConsent/groupMapDisplay/subTypeOrganization']
+                  } else if (serviceType === "education") {
+                    row.icon = serviceType
+                    type = d['groupConsent/groupMapDisplay/subTypeEduc']
+                  }
+
+                  // Handles translations
+                  if (translations[type] != undefined) {
+                    row.type.en = translations[type].label[0];
+                    row.type.fr = translations[type].label[1];
+                  } else {
+                    row.type.en = type;
+                    row.type.fr = type;
+                  }
+
+                  data.push(JSON.parse(JSON.stringify(row)))
                 }
-
-                // Handles translations
-                if (translations[type] != undefined) {
-                  row.type.en = translations[type].label[0];
-                  row.type.fr = translations[type].label[1];
-                } else {
-                  row.type.en = type;
-                  row.type.fr = type;
-                }
-
-                data.push(JSON.parse(JSON.stringify(row)))
               }
             })
           }

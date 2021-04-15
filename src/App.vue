@@ -1,6 +1,6 @@
 <template>
   <div class="App">
-    <div id="geoapp" :class="!$store.state.mapLoaded ? 'Blur' : ''">
+    <div id="geoapp" :class="$store.state.submissions === null ? 'Blur' : ''">
       <div class="Title">
         <h1 v-html="this.words[this.$store.state.lang].general.Title"></h1>
         <Translator/>

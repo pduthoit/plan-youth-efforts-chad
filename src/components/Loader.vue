@@ -1,10 +1,9 @@
 <template>
-  <div class="Loader" v-if="!$store.state.mapLoaded">
+  <div class="Loader" v-if="$store.state.submissions === null">
     <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
     <div class="Loader__text Loader__text--title">Please wait... map should appear in few seconds</div>
     <div class="Loader__text">Loading Kobo translations : <span v-html="$store.state.translations === null ? `<b class='dots'></b>` : 'OK'"></span></div>
     <div class="Loader__text">Loading Kobo submissions : <span v-html="$store.state.submissions === null ? `<b class='dots'></b>` : 'OK'"></span></div>
-    <div class="Loader__text">Loading map : <span v-html="!$store.state.mapLoaded ? `<b class='dots'></b>` : 'OK'"></span></div>
     <div class="Loader__bg"></div>
   </div>
 </template>

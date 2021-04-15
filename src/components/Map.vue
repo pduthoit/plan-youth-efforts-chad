@@ -64,8 +64,8 @@ export default {
       });
       setTimeout(function () {
         map.flyTo({
-          center: [8, 12],
-          zoom: 4,
+          center: [10, 12],
+          zoom: 5,
           speed: 0.6,
           essential: true,
           bearing: 0
