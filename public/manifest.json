@@ -1,0 +1,18 @@
+{
+    "name": "Plan",
+    "short_name": "Plan",
+    "theme_color": "#0072ce",
+    "icons": [
+        {
+        "src": "img/icons/pwa-192x192.png",
+        "sizes": "192x192"
+        },
+        {
+        "src": "img/icons/pwa-512x512.png",
+        "sizes": "512x512"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#ffffff"
+}

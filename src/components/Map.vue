@@ -3,7 +3,7 @@
     <mapbox
       access-token="pk.eyJ1IjoicGxjYXJ0b25nIiwiYSI6ImNrN25pbTN4bDAycXEzZnM4a212M3k1dWkifQ.mfCBz7pz5g7ykUXaeNy13A"
       :map-options="{
-        style: 'mapbox://styles/plcartong/ckihfzfro6i8b19s2zwgr3jdx/draft',
+        style: 'mapbox://styles/' + $store.state.style,
         center: [13, 12],
         zoom: 1.6,
         bearing: -6.5, // bearing in degrees
@@ -22,6 +22,7 @@ import * as Axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl'
  console.log(mapboxgl)
+
 export default {
   name: 'Map',
   components: { Mapbox },
@@ -34,6 +35,9 @@ export default {
     words
   }),
   watch: {
+    '$store.state.style': function() {
+      this.updateStyle()
+    },
     '$store.state.lang': function() {
       this.translate()
     },
@@ -55,6 +59,13 @@ export default {
           this.$store.state.map.setFilter('poi-' + categ, this.getMapFilter(categ));
         }
       }
+    },
+    updateStyle () {
+      this.$store.state.map.setStyle('mapbox://styles/' + this.$store.state.style);
+      let self = this;
+      this.$store.state.map.once('styledata', function () {
+        self.showIcons(self.$store.state.map)
+      })
     },
     loaded(map) {
       this.$store.commit('updateMapLoaded')
@@ -103,12 +114,13 @@ export default {
     showIcons: function (map) {
       for (let key in this.$store.state.categories) {
         var path = require('../assets/img/icons/' + key + '.png');
+
         map.loadImage(
           path,
           function (error, image) {
             var category = key
             if (error) throw error;
-            map.addImage(category, image);
+            if (!map.hasImage(category)) map.addImage(category, image);
         });
       }
 
@@ -139,28 +151,40 @@ export default {
       })
       var labelPopupFeature = "";
 
+      // Store popup to reuse it
+      this.$store.commit('updateLabelPopup', labelPopup)
+
       var places = {
         'type': 'FeatureCollection',
         'features': geojson
       };
       let self = this;
-      map.addSource('places', {
-        'type': 'geojson',
-        'data': places
-      });
+
+      // Remove layers and source if they already exists
+      if (typeof this.$store.state.map.getLayer('poi-education') !== 'undefined') this.$store.state.map.removeLayer('poi-education');
+      if (typeof this.$store.state.map.getLayer('poi-health') !== 'undefined') this.$store.state.map.removeLayer('poi-health');
+      if (typeof this.$store.state.map.getLayer('poi-youth-organizations') !== 'undefined') this.$store.state.map.removeLayer('poi-youth-organizations');
+
+      if (!map.getSource('places')) {
+        map.addSource('places', {
+          'type': 'geojson',
+          'data': places
+        });
+      }
+
       places.features.forEach(function (feature) {
         var symbol = feature.properties['icon'];
         var layerID = 'poi-' + symbol;
 
         // Add a layer for this symbol type if it hasn't been added already.
-        if (!map.getLayer(layerID)) {
+        if (typeof map.getLayer(layerID) === 'undefined') {
           map.addLayer({
             'id': layerID,
             'type': 'symbol',
             'source': 'places',
             'layout': {
             'icon-image': symbol,
-            'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.25, 3, 0.35, 5, 0.35, 8, 0.45],
+            'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.25, 3, 0.35, 5, 0.35, 8, 0.45, 9, 0.3],
             'icon-allow-overlap': true
           },
             'filter': self.getMapFilter(symbol)
@@ -182,53 +206,58 @@ export default {
             labelPopup.remove();
           })
 
-          map.on('click', layerID, function (e) {
-            labelPopup.remove();
-            var coordinates = e.features[0].geometry.coordinates.slice();
-            var image = "";
-            if (e.features[0].properties.image !== undefined) {
-              self.getBase64(e.features[0].properties.image).then(function(results) {
-                let base64 = "data:image/jpg;base64," + Buffer.from(results.data, 'binary').toString('base64').replace(/(\r\n|\n|\r)/gm, "");
-                let imageHtml = document.getElementsByClassName('Image')[0];
-                imageHtml.style.backgroundImage = "url('" + base64 + "')";
-              });
-
-              image = '<div class="Image"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
-            }
-            var infrastructure = '<h3>' + e.features[0].properties.label + '</h3>'
-            let icon = e.features[0].properties.icon;
-            var subtype = '<span class="subtype ' + icon + '" style="background:' + self.$store.state.categories[icon].color + '">' + words[self.$store.state.lang].category[icon] + '</span>'
-
-            var type = "", lang = self.$store.state.lang;
-
-            if (e.features[0].properties['type_' + lang] != 'null') {
-              type = '<p>' + e.features[0].properties['type_' + lang] + '</p>';
-            } else if (e.features[0].properties['type_en'] != 'null') {
-              type = '<p>' + e.features[0].properties['type_en'] + '</p>';
-            }
-
-            // Ensure that if the map is zoomed out such that multiple
-            // copies of the feature are visible, the popup appears
-            // over the copy being pointed to.
-            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-              coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-            }
-
-            new mapboxgl.Popup({offset: 30})
-              .setLngLat(coordinates)
-              .setHTML(image + infrastructure + subtype + type)
-              .addTo(map);
-
-            map.flyTo({
-              speed: 0.35,
-              center: e.features[0].geometry.coordinates,
-              essential: true
-            });
-          });
+          // Reset event listeners if they already exist
+          map.off('click', layerID, self.showPopup);
+          map.on('click', layerID, self.showPopup);
         }
       });
 
       this.$store.commit('updateMap', map)
+    },
+    showPopup(e) {
+      let map = this.$store.state.map;
+      this.$store.state.labelPopup.remove();
+      var coordinates = e.features[0].geometry.coordinates.slice();
+      var image = "";
+
+      if (e.features[0].properties.image !== undefined) {
+        this.getBase64(e.features[0].properties.image).then(function(results) {
+          let base64 = "data:image/jpg;base64," + Buffer.from(results.data, 'binary').toString('base64').replace(/(\r\n|\n|\r)/gm, "");
+          let imageHtml = document.getElementsByClassName('Image')[0];
+          imageHtml.style.backgroundImage = "url('" + base64 + "')";
+        });
+
+        image = '<div class="Image"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
+      }
+      var infrastructure = '<h3>' + e.features[0].properties.label + '</h3>'
+      let icon = e.features[0].properties.icon;
+      var subtype = '<span class="subtype ' + icon + '" style="background:' + this.$store.state.categories[icon].color + '">' + words[this.$store.state.lang].category[icon] + '</span>'
+
+      var type = "", lang = this.$store.state.lang;
+
+      if (e.features[0].properties['type_' + lang] != 'null') {
+        type = '<p>' + e.features[0].properties['type_' + lang] + '</p>';
+      } else if (e.features[0].properties['type_en'] != 'null') {
+        type = '<p>' + e.features[0].properties['type_en'] + '</p>';
+      }
+
+      // Ensure that if the map is zoomed out such that multiple
+      // copies of the feature are visible, the popup appears
+      // over the copy being pointed to.
+      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+      }
+
+      new mapboxgl.Popup({offset: 30})
+        .setLngLat(coordinates)
+        .setHTML(image + infrastructure + subtype + type)
+        .addTo(map);
+
+      map.flyTo({
+        speed: 0.35,
+        center: e.features[0].geometry.coordinates,
+        essential: true
+      });
     }
   }
 }

@@ -11,6 +11,10 @@ export const words = {
       'education': `Education`,
       'health': `Health`,
       'youth-organizations': `Youth organizations`,
+    },
+    pwa: {
+      ContentRefresh: "A new version of this webmap is available",
+      ContentRefreshButton: "Reload the page",
     }
   },
   fr: {
@@ -25,6 +29,10 @@ export const words = {
       'education': `Éducation`,
       'health': `Santé`,
       'youth-organizations': `Organisations pour les jeunes`,
+    },
+    pwa: {
+      ContentRefresh: "Une nouvelle version est disponible",
+      ContentRefreshButton: "Recharger la page",
     }
   }
 }

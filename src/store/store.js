@@ -15,9 +15,11 @@ export default new Vuex.Store({
     KOBO_USERNAME: 'youthprojectlcr',
     YEAR_DATA: null,
     MAX_COUNT: null,
+    style: 'plcartong/ckihfzfro6i8b19s2zwgr3jdx/draft',
     submissions: null,
     translations: null,
     map: null,
+    labelPopup: null,
     mapLoaded: false,
     lang: 'en',
     minYearShown: null,
@@ -34,7 +36,8 @@ export default new Vuex.Store({
       // 'school': { icon: 'school', label: 'school', shown: true, color: "#d22630"},
       // 'sexual-violence': { icon: 'sexual-violence', label: 'sexual-violence', shown: true, color: "#ef008c"},
       // 'training': { icon: 'training', label: 'training', shown: true, color: "#f1c400"},
-    }
+    },
+    newContent: false
   },
   mutations: {
     updateSubmissions (state, submissions) {
@@ -46,11 +49,17 @@ export default new Vuex.Store({
     updateMap (state, map) {
       state.map = map
     },
+    updateLabelPopup (state, labelPopup) {
+      state.labelPopup = labelPopup
+    },
     updateMapLoaded (state) {
       state.mapLoaded = true
     },
     updateLang (state, lang) {
       state.lang = lang
+    },
+    updateStyle (state, style) {
+      state.style = style
     },
     updateYearsData (state, YEAR_DATA) {
       state.YEAR_DATA = YEAR_DATA;
@@ -76,6 +85,9 @@ export default new Vuex.Store({
           state.categories[category].shown ? 'visible' : 'none'
         );
       }
+    },
+    updateNewContent(state, newContent) {
+      state.newContent = newContent
     }
   },
 

@@ -1,16 +1,18 @@
 <template>
-  <div class="App">
+  <div :class="$store.state.style === 'mapbox/satellite-streets-v11' ? 'App App--satellite' : 'App'">
     <div id="geoapp" :class="$store.state.submissions === null ? 'Blur' : ''">
       <div class="Title">
         <h1 v-html="this.words[this.$store.state.lang].general.Title"></h1>
         <Translator/>
       </div>
       <Map/>
+      <BasemapPicker/>
       <Legend/>
       <YearRange/>
       <Sponsors/>
     </div>
     <Loader/>
+    <ContentRefresh v-show="$store.state.newContent"/>
   </div>
 </template>
 
@@ -20,22 +22,26 @@ import Map from './components/Map.vue'
 import Translator from './components/Translator.vue'
 import Loader from './components/Loader.vue'
 import Legend from './components/Legend.vue'
+import BasemapPicker from './components/BasemapPicker.vue'
 import YearRange from './components/YearRange.vue'
 import Sponsors from './components/Sponsors.vue'
+import ContentRefresh from './components/ContentRefresh.vue'
 
 export default {
   name: 'App',
   components: {
     Map,
     Legend,
+    BasemapPicker,
     YearRange,
     Loader,
     Translator,
-    Sponsors
+    Sponsors,
+    ContentRefresh
   },
   watch: {
     '$store.state.submissions': function() {
-      
+
       let categories = Object.keys(this.$store.state.categories)
 
       // for (let i = 0; i < 200; i++) {
@@ -104,6 +110,9 @@ export default {
   }
   .App {
     height: 100%;
+  }
+  .BasemapPicker {
+    align-self: flex-start;
   }
   #geoapp {
     height: 100%;
@@ -189,6 +198,11 @@ export default {
 
   @media screen and (max-width: 640px) {
     #geoapp {
+
+      .BasemapPicker {
+        top: 140px;
+      }
+
       &::before {
         background: linear-gradient(180deg, rgba(255, 255, 255, 1), transparent);
         height: 25vh;
@@ -236,6 +250,73 @@ export default {
           }
         }
       }
+    }
+  }
+
+  // Edit app style if satellite imagery is used in the map
+  .App.App--satellite #geoapp {
+
+    &::before {
+      background: linear-gradient(180deg, rgba(0,0,0,0.5),transparent);
+    }
+    &::after {
+      background: linear-gradient(0deg,rgba(0,0,0,0.5),transparent);
+    }
+    .Title h1 {
+      &, b {
+        font-weight: 100 !important;
+        color: white;
+      }
+    }
+    .Translator .Translator__list .Translator__item {
+        color: white !important;
+
+        .Translator__item:not(:last-child) {
+          border-right-color: white !important;
+        }
+    }
+    .Sponsors__disclaimer {
+        color: rgba(255,255,255,.78);
+    }
+    .mapboxgl-ctrl-attrib a {
+      color: rgba(255,255,255,0.75);
+    }
+    .mapboxgl-ctrl.mapboxgl-ctrl-attrib {
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .YR__ctn .YR .YR__bar[data-active] {
+      background: #4e4e4e;
+    }
+    .YR__ctn .YR .YR__bar {
+      background-color: #ccc;
+    }
+    .YR__ctn .YR.YR--barCtn {
+      box-shadow: 0 6px 15px -2px rgba(0,0,0,.74);
+    }
+    .YR__ctn .YR .YR__bar:not(.YR__bar--hidden):before {
+      color: #fff;
+    }
+    .YR__ctn .YR .YR__bar:not(.YR__bar--hidden):after {
+      background: #ccc;
+    }
+    .YR__ctn .YR.YR--draglist .YR__dragzone .YR__dragpoint {
+        color: #000;
+        background: #fff;
+        box-shadow: 0 2px 4px -1px rgba(0,0,0,0.3);
+    }
+    .Legend {
+      box-shadow: 0 6px 15px -5px #282828;
+    }
+
+    @media screen and (max-width: 640px) {
+      #geoapp:before {
+          background: linear-gradient(180deg ,rgba(0,0,0,.37),transparent);
+      }
+    }
+
+    .mapboxgl-popup-content {
+        box-shadow: 0 5px 21px -3px rgba(0,0,0,.5);
     }
   }
 </style>
