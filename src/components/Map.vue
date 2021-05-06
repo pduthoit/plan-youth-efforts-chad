@@ -168,10 +168,88 @@ export default {
       if (!map.getSource('places')) {
         map.addSource('places', {
           'type': 'geojson',
-          'data': places
+          'data': places,
+          cluster: true,
+          clusterMaxZoom: 13, // Max zoom to cluster points on
+          clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
         });
       }
+      map.addLayer({
+        id: 'clusters',
+        type: 'circle',
+        source: 'places',
+        filter: ['has', 'point_count'],
+        paint: {
+          // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
+          // with three steps to implement three types of circles:
+          //   * Blue, 20px circles when point count is less than 100
+          //   * Yellow, 30px circles when point count is between 100 and 750
+          //   * Pink, 40px circles when point count is greater than or equal to 750
+          'circle-color': [
+            'step',
+            ['get', 'point_count'],
+            'rgba(0,0,0,0.5)',
+            25,
+            'rgba(0,0,0,0.6)',
+            50,
+            'rgba(0,0,0,0.7)'
+            // '#51bbd6',
+            // 25,
+            // '#f1f075',
+            // 50,
+            // '#f28cb1'
+          ],
+          'circle-radius': [
+            'step',
+            ['get', 'point_count'],
+            20,
+            25,
+            25,
+            50,
+            30
+          ]
+        }
+      });
 
+      map.addLayer({
+        id: 'cluster-count',
+        type: 'symbol',
+        source: 'places',
+        filter: ['has', 'point_count'],
+        layout: {
+          'text-field': '{point_count_abbreviated}',
+          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+          'text-size': 14
+        },
+        paint: {
+          "text-color": "#ffffff"
+        }
+      });
+
+      // inspect a cluster on click
+      map.on('click', 'clusters', function (e) {
+        var features = map.queryRenderedFeatures(e.point, {
+          layers: ['clusters']
+        });
+        var clusterId = features[0].properties.cluster_id;
+        map.getSource('places').getClusterExpansionZoom(
+          clusterId,
+          function (err, zoom) {
+          if (err) return;
+          map.easeTo({
+            center: features[0].geometry.coordinates,
+            zoom: zoom
+          });
+          }
+        );
+      });
+
+      map.on('mouseenter', 'clusters', function () {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', 'clusters', function () {
+        map.getCanvas().style.cursor = '';
+      });
       places.features.forEach(function (feature) {
         var symbol = feature.properties['icon'];
         var layerID = 'poi-' + symbol;
