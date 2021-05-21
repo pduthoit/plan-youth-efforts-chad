@@ -97,8 +97,8 @@ export default new Vuex.Store({
       try {
         let data = []
 
-        // const PROXY_FOR_CORS = ""
-        const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
+        const PROXY_FOR_CORS = ""
+        // const PROXY_FOR_CORS = "https://cartong-cors-anywhere.herokuapp.com/"
         const TRANSLATION_URL = "https://kobo.humanitarianresponse.info/api/v2/assets/" + this.state.FORMS_UID.cameroon + "/deployment/";
         const koboReqOptions = {
           method: 'get',

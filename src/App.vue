@@ -1,5 +1,5 @@
 <template>
-  <div :class="$store.state.style === 'mapbox/satellite-streets-v11' ? 'App App--satellite' : 'App'">
+  <div :class="$store.state.style === 'plcartong/ckoy2wdqy00px17nj4b0otfog/draft' ? 'App App--satellite' : 'App'">
     <div id="geoapp" :class="$store.state.submissions === null ? 'Blur' : ''">
       <div class="Title">
         <h1 v-html="this.words[this.$store.state.lang].general.Title"></h1>

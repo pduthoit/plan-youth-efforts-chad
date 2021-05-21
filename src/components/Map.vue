@@ -10,6 +10,7 @@
       }"
       @map-init="initialized"
       @map-load="loaded"
+      @map-moveend="updateMap"
     />
     <nav id="filter-group" class="filter-group"></nav>
   </div>
@@ -21,7 +22,7 @@ import Mapbox from 'mapbox-gl-vue'
 import * as Axios from 'axios'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl'
- console.log(mapboxgl)
+console.log(mapboxgl)
 
 export default {
   name: 'Map',
@@ -32,7 +33,10 @@ export default {
     }
   },
   data: () => ({
-    words
+    words,
+    markers: {},
+    markersOnScreen: {},
+    source: 'places'
   }),
   watch: {
     '$store.state.style': function() {
@@ -56,7 +60,7 @@ export default {
       for (var key in this.$store.state.categories) {
         let categ = key;
         if (typeof this.$store.state.map.getLayer('poi-' + categ) !== 'undefined') {
-          this.$store.state.map.setFilter('poi-' + categ, this.getMapFilter(categ));
+          this.$store.state.map.setFilter('poi-' + categ, this.getClusterFilter(categ));
         }
       }
     },
@@ -69,6 +73,7 @@ export default {
     },
     loaded(map) {
       this.$store.commit('updateMapLoaded')
+
       this.showIcons(map)
       window.addEventListener('resize', () => {
         map.resize()
@@ -83,20 +88,28 @@ export default {
         });
       }, 250);
     },
+
+    updateMap: function () {
+      this.updateMarkers();
+    },
     getMapFilter: function (category) {
       return [
         'all',
-        ['>=', 'year', this.$store.state.minYearFilter + +this.$store.state.minYearShown - 1],
-        ['<', 'year', this.$store.state.maxYearFilter + +this.$store.state.minYearShown - 1]
-        ,['==', 'icon', category]
+        ['>=', ['get', 'year'], this.$store.state.minYearFilter + +this.$store.state.minYearShown - 1],
+        ['<', ['get', 'year'], this.$store.state.maxYearFilter + +this.$store.state.minYearShown - 1],
+        ['==', ['get', 'icon'], category]
       ];
+    },
+    getClusterFilter: function (category) {
+      // Hide points if clustered
+      return [...this.getMapFilter(category), ['!=', ['get', 'cluster'], true]]
     },
     translate: function () {
       this.$store.state.map.setLayoutProperty('country-label', 'text-field', ['get', 'name_' + this.$store.state.lang]);
     },
     getBase64: async function (url) {
       // const PROXY_FOR_CORS = ""
-      const PROXY_FOR_CORS = "https://cors-anywhere.herokuapp.com/"
+      const PROXY_FOR_CORS = "https://cartong-cors-anywhere.herokuapp.com/"
       const koboImgUrl = "https://kc.humanitarianresponse.info/attachment/medium?media_file=" + this.$store.state.KOBO_USERNAME + "/attachments/";
       let fullUrl = PROXY_FOR_CORS + koboImgUrl + url;
       const koboReqOptions = {
@@ -112,6 +125,7 @@ export default {
       return koboRes;
     },
     showIcons: function (map) {
+
       for (let key in this.$store.state.categories) {
         var path = require('../assets/img/icons/' + key + '.png');
 
@@ -127,7 +141,6 @@ export default {
       var geojson = [];
       Array.prototype.forEach.call(this.$store.state.submissions , function(line) {
         geojson.push({
-          // 'type': 'Feature',
           'properties': {
             'year': line.year,
             'icon': line.icon,
@@ -142,7 +155,6 @@ export default {
           }
         })
       })
-
 
       var labelPopup = new mapboxgl.Popup({
         closeButton: false,
@@ -165,91 +177,27 @@ export default {
       if (typeof this.$store.state.map.getLayer('poi-health') !== 'undefined') this.$store.state.map.removeLayer('poi-health');
       if (typeof this.$store.state.map.getLayer('poi-youth-organizations') !== 'undefined') this.$store.state.map.removeLayer('poi-youth-organizations');
 
-      if (!map.getSource('places')) {
-        map.addSource('places', {
+      // Cluster filters
+      var education =          this.getMapFilter('education');
+      var health =             this.getMapFilter('health');
+      var youthOrganizations = this.getMapFilter('youth-organizations');
+
+      if (!map.getSource(this.source)) {
+        map.addSource(this.source, {
           'type': 'geojson',
           'data': places,
           cluster: true,
-          clusterMaxZoom: 13, // Max zoom to cluster points on
-          clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
+          clusterMaxZoom: 15, // Max zoom to cluster points on
+          tolerance: 0,
+          clusterProperties: {
+            // keep separate counts for each category in a cluster
+            'education':          ['+', ['case', education, 1, 0]],
+            'health':             ['+', ['case', health, 1, 0]],
+            'youthOrganizations': ['+', ['case', youthOrganizations, 1, 0]]
+          }
         });
       }
-      map.addLayer({
-        id: 'clusters',
-        type: 'circle',
-        source: 'places',
-        filter: ['has', 'point_count'],
-        paint: {
-          // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
-          // with three steps to implement three types of circles:
-          //   * Blue, 20px circles when point count is less than 100
-          //   * Yellow, 30px circles when point count is between 100 and 750
-          //   * Pink, 40px circles when point count is greater than or equal to 750
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            'rgba(0,0,0,0.5)',
-            25,
-            'rgba(0,0,0,0.6)',
-            50,
-            'rgba(0,0,0,0.7)'
-            // '#51bbd6',
-            // 25,
-            // '#f1f075',
-            // 50,
-            // '#f28cb1'
-          ],
-          'circle-radius': [
-            'step',
-            ['get', 'point_count'],
-            20,
-            25,
-            25,
-            50,
-            30
-          ]
-        }
-      });
 
-      map.addLayer({
-        id: 'cluster-count',
-        type: 'symbol',
-        source: 'places',
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 14
-        },
-        paint: {
-          "text-color": "#ffffff"
-        }
-      });
-
-      // inspect a cluster on click
-      map.on('click', 'clusters', function (e) {
-        var features = map.queryRenderedFeatures(e.point, {
-          layers: ['clusters']
-        });
-        var clusterId = features[0].properties.cluster_id;
-        map.getSource('places').getClusterExpansionZoom(
-          clusterId,
-          function (err, zoom) {
-          if (err) return;
-          map.easeTo({
-            center: features[0].geometry.coordinates,
-            zoom: zoom
-          });
-          }
-        );
-      });
-
-      map.on('mouseenter', 'clusters', function () {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', 'clusters', function () {
-        map.getCanvas().style.cursor = '';
-      });
       places.features.forEach(function (feature) {
         var symbol = feature.properties['icon'];
         var layerID = 'poi-' + symbol;
@@ -259,13 +207,13 @@ export default {
           map.addLayer({
             'id': layerID,
             'type': 'symbol',
-            'source': 'places',
+            'source': self.source,
             'layout': {
-            'icon-image': symbol,
-            'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.25, 3, 0.35, 5, 0.35, 8, 0.45, 9, 0.3],
-            'icon-allow-overlap': true
-          },
-            'filter': self.getMapFilter(symbol)
+              'icon-image': symbol,
+              'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.15, 3, 0.25, 5, 0.25, 8, 0.3, 9, 0.3],
+              'icon-allow-overlap': true
+            },
+            'filter': self.getClusterFilter(symbol)
           });
 
           map.on('mouseenter', layerID, (e) => {
@@ -291,6 +239,131 @@ export default {
       });
 
       this.$store.commit('updateMap', map)
+    },
+    updateMarkers() {
+      var map = this.$store.state.map;
+      var newMarkers = {};
+      var features = map.querySourceFeatures(this.source);
+      var self = this;
+
+      // for every cluster on the screen, create an HTML marker for it (if we didn't yet),
+      // and add it to the map if it's not there already
+      for (var i = 0; i < features.length; i++) {
+        var coords = features[i].geometry.coordinates;
+        var props = features[i].properties;
+        if (!props.cluster) continue;
+        var id = props.cluster_id;
+        var marker = this.markers[id];
+
+        if (!marker) {
+          var el = this.createDonutChart(props, coords);
+          marker = this.markers[id] = new mapboxgl.Marker({
+            element: el
+          }).setLngLat(coords);
+
+          // On cluster click, zoom to it's extent points
+          marker.getElement().addEventListener('click', (e) => {
+
+            // SVG Marker element
+            let svg = e.currentTarget.lastChild;
+
+            // Retrieve clicked cluster id and coordinates
+            let clusterId = +svg.getAttribute('data-id');
+            let coordinates = [
+              parseFloat(svg.getAttribute('coords-x')),
+              parseFloat(svg.getAttribute('coords-y'))
+            ];
+
+            // Zoom on cluster expansion zoom extent
+            map.getSource(self.source).getClusterExpansionZoom(
+              clusterId,
+              function (err, zoom) {
+                if (err) return;
+                if (!zoom) return;
+                map.easeTo({
+                  center: coordinates,
+                  zoom: zoom
+                });
+              }
+            );
+          });
+        }
+        newMarkers[id] = marker;
+
+        // If the cluster is not on the screen show it
+        if (!this.markersOnScreen[id]) marker.addTo(map);
+      }
+      // for every marker we've added previously, remove those that are no longer visible
+      for (id in this.markersOnScreen) {
+        if (!newMarkers[id]) this.markersOnScreen[id].remove();
+      }
+      this.markersOnScreen = newMarkers;
+    },
+
+    // code for creating an SVG donut chart from feature properties
+    createDonutChart(props, coords) {
+      var colors = ['#00843d','#0072ce','#e17800'];
+      var offsets = [];
+      var counts = [
+        this.$store.state.categories['education'].shown ? props.education : 0,
+        this.$store.state.categories['health'].shown ? props.health : 0,
+        this.$store.state.categories['youth-organizations'].shown ? props.youthOrganizations : 0
+      ];
+
+      var total = 0;
+      for (var i = 0; i < counts.length; i++) {
+        offsets.push(total);
+        total += counts[i];
+      }
+      var fontSize =
+      total >= 1000 ? 22 : total >= 100 ? 20 : total >= 10 ? 18 : 16;
+      var r = total >= 1000 ? 50 : total >= 100 ? 32 : total >= 10 ? 24 : 18;
+      var r0 = Math.round(r * 0.6);
+      var w = r * 2;
+
+      var html =
+      '<div><svg data-id="' + props.cluster_id + '" coords-x="'+ coords[0] +'" coords-y="'+ coords[1] +'" width="' + w + '" height="' + w + '" viewbox="0 0 ' + w + ' ' + w +
+      '" text-anchor="middle" style="font: ' + fontSize + 'px sans-serif; display: block">' +
+      '<style>.text-cluster { fill: white; font-size: 12px; }</style>';
+
+      for (i = 0; i < counts.length; i++) {
+        html += this.donutSegment(
+          offsets[i] / total,
+          (offsets[i] + counts[i]) / total,
+          r,
+          r0,
+          colors[i]
+        );
+      }
+
+      html +=
+      '<circle cx="' + r + '" cy="' + r + '" r="' + r0 + '" fill="rgba(0,0,0,0.6)" />' +
+      '<text dominant-baseline="central" class="text-cluster" transform="translate(' +
+      r + ', ' + r + ')">' + total.toLocaleString() + '</text>' +
+      '</svg></div>';
+
+      var el = document.createElement('div');
+      el.innerHTML = html;
+      return el.firstChild;
+    },
+
+    donutSegment(start, end, r, r0, color) {
+      if (end - start === 1) end -= 0.00001;
+      var a0 = 2 * Math.PI * (start - 0.25);
+      var a1 = 2 * Math.PI * (end - 0.25);
+      var x0 = Math.cos(a0),
+      y0 = Math.sin(a0);
+      var x1 = Math.cos(a1),
+      y1 = Math.sin(a1);
+      var largeArc = end - start > 0.5 ? 1 : 0;
+
+      return [
+        '<path d="M', r + r0 * x0, r + r0 * y0,
+        'L', r + r * x0, r + r * y0,
+        'A', r, r, 0, largeArc, 1, r + r * x1, r + r * y1,
+        'L', r + r0 * x1, r + r0 * y1,
+        'A', r0, r0, 0, largeArc, 0, r + r0 * x0, r + r0 * y0, '" fill="' + color + '" />'
+      ].join(' ');
     },
     showPopup(e) {
       let map = this.$store.state.map;
@@ -396,7 +469,9 @@ export default {
     transform: translateY(0);
   }
 }
-
+.mapboxgl-marker {
+  cursor: zoom-in;
+}
 .mapboxgl-popup-content {
   padding: 0;
   overflow: hidden;

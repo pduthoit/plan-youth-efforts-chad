@@ -24,12 +24,12 @@ export default {
       styles: [
         {
           style: 'plcartong/ckihfzfro6i8b19s2zwgr3jdx/draft',
-          name: 'PLAN map',
+          name: "Plan",
           img: require('../assets/img/basemap-plan.png')
         },
         {
-          style: 'mapbox/satellite-streets-v11',
-          name: 'Satellite',
+          style: 'plcartong/ckoy2wdqy00px17nj4b0otfog/draft',
+          name: "Satellite",
           img: require('../assets/img/basemap-satellite.png')
         },
       ]
