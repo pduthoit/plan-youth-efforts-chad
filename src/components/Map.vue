@@ -10,7 +10,7 @@
       }"
       @map-init="initialized"
       @map-load="loaded"
-      @map-moveend="updateMap"
+      @map-moveend="updateMapMarkers"
     />
     <nav id="filter-group" class="filter-group"></nav>
   </div>
@@ -89,8 +89,9 @@ export default {
       }, 250);
     },
 
-    updateMap: function () {
-      this.updateMarkers();
+    updateMapMarkers: function () {
+      let self = this
+      setTimeout(function() { self.updateMarkers(); }, 100);
     },
     getMapFilter: function (category) {
       return [
@@ -187,7 +188,7 @@ export default {
           'type': 'geojson',
           'data': places,
           cluster: true,
-          clusterMaxZoom: 15, // Max zoom to cluster points on
+          clusterMaxZoom: 14, // Max zoom to cluster points on
           tolerance: 0,
           clusterProperties: {
             // keep separate counts for each category in a cluster
@@ -282,7 +283,7 @@ export default {
                 if (!zoom) return;
                 map.easeTo({
                   center: coordinates,
-                  zoom: zoom
+                  zoom: zoom + 1
                 });
               }
             );
