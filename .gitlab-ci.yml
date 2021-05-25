@@ -2,6 +2,10 @@ pages:
   image: node:8
   stage: build
   script:
+    - echo $CI_PROJECT_NAMESPACE
+    - echo $CI_PROJECT_NAME
+    - echo $CI_JOB_ID
+    - echo "Unit result" >> public/$CI_COMMIT_REF_SLUG/$UNIT_FOLDER/index.html
     - npm install --progress=false
     - npm run build
     - cp -r dist/* public/
@@ -9,5 +13,11 @@ pages:
   artifacts:
     paths:
     - public
+  environment:
+    name: dev
+    url: "https://$CI_PROJECT_NAMESPACE.gitlab.com/-/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public/index.html"
   only:
     - master
+    
+  variables:
+    PUBLIC_URL: "/-/plan/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public"
