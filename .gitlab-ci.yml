@@ -9,7 +9,7 @@ pages:
     - npm run build
     - cp -r dist/* public/
     - find public -type f -regex '.*\.\(htm\|html\|txt\|text\|js\|css\)$' -exec gzip -f -k {} \;
-    - echo "Unit result" >> public/$CI_COMMIT_REF_SLUG/index.html
+    # - echo "Unit result" >> public/$CI_COMMIT_REF_SLUG/index.html
   artifacts:
     paths:
     - public
