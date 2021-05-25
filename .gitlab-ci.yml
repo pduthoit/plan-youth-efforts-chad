@@ -15,7 +15,7 @@ pages:
     - public
   environment:
     name: dev
-    url: "https://$CI_PROJECT_NAMESPACE.gitlab.com/-/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public/index.html"
+    url: "https://$CI_PROJECT_NAMESPACE.pages.gitlab.cartong.org/-/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public/index.html"
   only:
     - master
     
