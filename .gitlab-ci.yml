@@ -5,12 +5,11 @@ pages:
     - echo $CI_PROJECT_NAMESPACE
     - echo $CI_PROJECT_NAME
     - echo $CI_JOB_ID
-    - echo $UNIT_FOLDER
-    - echo "Unit result" >> public/$CI_COMMIT_REF_SLUG/brazil/index.html
     - npm install --progress=false
     - npm run build
     - cp -r dist/* public/
     - find public -type f -regex '.*\.\(htm\|html\|txt\|text\|js\|css\)$' -exec gzip -f -k {} \;
+    - echo "Unit result" >> public/$CI_COMMIT_REF_SLUG/index.html
   artifacts:
     paths:
     - public
