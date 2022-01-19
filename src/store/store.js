@@ -6,7 +6,8 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    AUTH_TOKEN: `Token 62ae6a7111c71d1bf5bf6cd24c66570dff0996cc`,
+    AUTH_TOKEN: `Token ad9e22beb3829f684544127d26c8a3dc9e1295b6`,
+    mapboxToken: `pk.eyJ1IjoicGxjYXJ0b25nIiwiYSI6ImNrN25pbTN4bDAycXEzZnM4a212M3k1dWkifQ.mfCBz7pz5g7ykUXaeNy13A`,
     FORMS_UID: {
       nigeria:  'aJn6r5KosffwG4S4exSzrJ',
       niger:    'akY29uvotxjroqJPvwxd6J',
@@ -17,8 +18,10 @@ export default new Vuex.Store({
     MAX_COUNT: null,
     style: 'plcartong/ckihfzfro6i8b19s2zwgr3jdx/draft',
     submissions: null,
+    selectedPlaceData: null,
     translations: null,
     map: null,
+    geocoder: null,
     labelPopup: null,
     mapLoaded: false,
     lang: 'en',
@@ -26,6 +29,7 @@ export default new Vuex.Store({
     yearsCount: 0,
     minYearFilter: 0,
     maxYearFilter: 1,
+    selectedCategory: null,
     categories: {
       'education': { icon: 'education', shown: true, color: "#00843d"},
       'health': { icon: 'health', shown: true, color: "#0072ce"},
@@ -48,6 +52,13 @@ export default new Vuex.Store({
     },
     updateMap (state, map) {
       state.map = map
+    },
+    updateGeocoder (state, geocoder) {
+      state.geocoder = geocoder
+    },
+    updateSelectedPlaceData (state, placeData) {
+      state.selectedPlaceData = placeData
+      console.log(state.selectedPlaceData)
     },
     updateLabelPopup (state, labelPopup) {
       state.labelPopup = labelPopup
@@ -75,16 +86,18 @@ export default new Vuex.Store({
     updateMaxYearFilter (state, year) {
       state.maxYearFilter = year
     },
-    toggleMapLayerState(state, category) {
-      state.categories[category].shown = !state.categories[category].shown;
+    updateSelectedCategory (state, category = null) {
+      state.selectedCategory = state.selectedCategory === category ? null : category
 
-      if (typeof state.map.getLayer('poi-' + category) !== 'undefined') {
-        state.map.setLayoutProperty(
-          'poi-' + category,
-          'visibility',
-          state.categories[category].shown ? 'visible' : 'none'
-        );
-      }
+      Object.keys(state.categories).forEach(cat => {
+        let show = (state.selectedCategory === cat || state.selectedCategory === null) ? 'visible' : 'none'
+        if (typeof state.map.getLayer('poi-' + cat) !== 'undefined') {
+          state.map.setLayoutProperty(
+            'poi-' + cat,
+            'visibility', show
+          );
+        }
+      })
     },
     updateNewContent(state, newContent) {
       state.newContent = newContent
@@ -97,8 +110,8 @@ export default new Vuex.Store({
       try {
         let data = []
 
-        const PROXY_FOR_CORS = ""
-        // const PROXY_FOR_CORS = "https://cartong-cors-anywhere.herokuapp.com/"
+        // const PROXY_FOR_CORS = ""
+        const PROXY_FOR_CORS = "https://cartong-cors-anywhere.herokuapp.com/"
         const TRANSLATION_URL = "https://kobo.humanitarianresponse.info/api/v2/assets/" + this.state.FORMS_UID.cameroon + "/deployment/";
         const koboReqOptions = {
           method: 'get',
@@ -125,6 +138,7 @@ export default new Vuex.Store({
 
               let defaultRow = {
                 coords: [],
+                id: null,
                 year: 1111,
                 icon: 'no category',
                 label: 'No label',
@@ -134,23 +148,26 @@ export default new Vuex.Store({
                   en: '',
                   fr: '',
                 },
+                data: null
               };
 
               for (let d of response.data.results) {
                 // Show only validated submissions
                 if (d._validation_status.uid === 'validation_status_approved') {
-
                   let row = Object.assign({}, defaultRow)
                   let type = ""
+                  row.id = +d._id
                   row.year = +d.today.substring(0,4)
                   row.coords = d._geolocation.reverse()
                   row.label = d['groupConsent/groupMapDisplay/name']
                   row.image = d['groupConsent/groupMapDisplay/picture']
                   let serviceType = d['groupConsent/groupMapDisplay/serviceType']
+                  row.data = d;
 
                   if (serviceType === "health") {
                     row.icon = serviceType
                     type = d['groupConsent/groupMapDisplay/subTypeHlt']
+                    console.log(d)
                   } else if (serviceType === "youthParticipation") {
                     row.icon = 'youth-organizations'
                     type = d['groupConsent/groupMapDisplay/subTypeOrganization']

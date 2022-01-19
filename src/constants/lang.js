@@ -1,7 +1,7 @@
 export const words = {
   en: {
     general: {
-      Title: `<b>Youth leading stabilizations efforts</b> in the Lake Chad Basin`,
+      Title: `<b>Youth leading stabilizations efforts</b><br>in the Lake Chad Basin`,
     },
     sponsors: {
       Eu: `This project is financed thanks to the support of the European Union.`,
@@ -19,7 +19,7 @@ export const words = {
   },
   fr: {
     general: {
-      Title: `<b>La jeunesse à la tête des efforts de stabilisation</b> dans le bassin du lac Tchad`,
+      Title: `<b>La jeunesse à la tête des efforts de stabilisation</b><br>dans le bassin du lac Tchad`,
     },
     sponsors: {
       Eu: `Ce projet a été financé grâce à l'aide de l'Union Européenne`,

@@ -58,11 +58,11 @@ export default {
   .BasemapPicker {
     z-index: 1;
     position: absolute;
-    top: 108px;
-    right: 10px;
+    top: 10px;
+    left: 10px;
     display: flex;
     flex-flow: column;
-    align-items: flex-end;
+    align-items: flex-start;
 
     .BasemapPicker__toggle {
       display: flex;
@@ -92,13 +92,13 @@ export default {
       color: #444;
 
       .BasemapPicker__item {
-        padding: 2px 0 0 8px;
+        padding: 2px 8px 0 0;
         line-height: 12px;
         font-size: 0.8em;
         cursor: pointer;
         display: flex;
         flex-flow: column nowrap;
-        align-items: flex-end;
+        align-items: flex-start;
         opacity: 1;
 
         &--active {

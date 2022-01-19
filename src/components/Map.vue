@@ -1,16 +1,20 @@
 <template>
   <div id="map" v-if="$store.state.submissions">
     <mapbox
-      access-token="pk.eyJ1IjoicGxjYXJ0b25nIiwiYSI6ImNrN25pbTN4bDAycXEzZnM4a212M3k1dWkifQ.mfCBz7pz5g7ykUXaeNy13A"
+      :access-token="$store.state.mapboxToken"
       :map-options="{
         style: 'mapbox://styles/' + $store.state.style,
         center: [13, 12],
         zoom: 1.6,
         bearing: -6.5, // bearing in degrees
+        padding: {
+          right: 420
+        }
       }"
       @map-init="initialized"
       @map-load="loaded"
-      @map-moveend="updateMapMarkers"
+      @map-move="updateMapMarkers"
+      @map-zoomend="updateMapMarkersEnd"
     />
     <nav id="filter-group" class="filter-group"></nav>
   </div>
@@ -46,10 +50,10 @@ export default {
       this.translate()
     },
     '$store.state.minYearFilter': function() {
-      this.updateIcons()
+      if (this.$store.state.map != null) this.updateIcons()
     },
     '$store.state.maxYearFilter': function() {
-      this.updateIcons()
+      if (this.$store.state.map != null) this.updateIcons()
     },
   },
   methods: {
@@ -84,14 +88,18 @@ export default {
           zoom: 5,
           speed: 0.6,
           essential: true,
-          bearing: 0
+          bearing: 0,
+          padding: {
+            right: 420
+          }
         });
       }, 250);
     },
-
+    updateMapMarkersEnd: function () {
+      this.$store.state.map.jumpTo({center: this.$store.state.map.getCenter()})
+    },
     updateMapMarkers: function () {
-      let self = this
-      setTimeout(function() { self.updateMarkers(); }, 100);
+      this.updateMarkers();
     },
     getMapFilter: function (category) {
       return [
@@ -143,6 +151,7 @@ export default {
       Array.prototype.forEach.call(this.$store.state.submissions , function(line) {
         geojson.push({
           'properties': {
+            'id': line.id,
             'year': line.year,
             'icon': line.icon,
             'label': line.label,
@@ -188,7 +197,7 @@ export default {
           'type': 'geojson',
           'data': places,
           cluster: true,
-          clusterMaxZoom: 14, // Max zoom to cluster points on
+          clusterMaxZoom: 12, // Max zoom to cluster points on
           tolerance: 0,
           clusterProperties: {
             // keep separate counts for each category in a cluster
@@ -211,7 +220,7 @@ export default {
             'source': self.source,
             'layout': {
               'icon-image': symbol,
-              'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.15, 3, 0.25, 5, 0.25, 8, 0.3, 9, 0.3],
+              'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.15, 3, 0.25, 5, 0.25, 8, 0.25, 9, 0.3],
               'icon-allow-overlap': true
             },
             'filter': self.getClusterFilter(symbol)
@@ -283,7 +292,7 @@ export default {
                 if (!zoom) return;
                 map.easeTo({
                   center: coordinates,
-                  zoom: zoom + 1
+                  zoom: zoom + 1.1
                 });
               }
             );
@@ -406,9 +415,13 @@ export default {
         .addTo(map);
 
       map.flyTo({
-        speed: 0.35,
+        speed: 0.95,
         center: e.features[0].geometry.coordinates,
-        essential: true
+        essential: true,
+        zoom: 14,
+        padding: {
+          right: 420
+        }
       });
     }
   }

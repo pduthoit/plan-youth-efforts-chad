@@ -7,7 +7,8 @@
       </div>
       <Map/>
       <BasemapPicker/>
-      <Legend/>
+      <InfoPanel/>
+      <CategoryPicker/>
       <YearRange/>
       <Sponsors/>
     </div>
@@ -19,9 +20,9 @@
 <script>
 import { words } from '@/constants/lang'
 import Map from './components/Map.vue'
+import InfoPanel from './components/InfoPanel.vue'
 import Translator from './components/Translator.vue'
 import Loader from './components/Loader.vue'
-import Legend from './components/Legend.vue'
 import BasemapPicker from './components/BasemapPicker.vue'
 import YearRange from './components/YearRange.vue'
 import Sponsors from './components/Sponsors.vue'
@@ -31,13 +32,13 @@ export default {
   name: 'App',
   components: {
     Map,
-    Legend,
     BasemapPicker,
     YearRange,
     Loader,
     Translator,
     Sponsors,
-    ContentRefresh
+    ContentRefresh,
+    InfoPanel
   },
   watch: {
     '$store.state.submissions': function() {
@@ -153,8 +154,9 @@ export default {
       display: flex;
       flex-flow: row nowrap;
       align-items: center;
+      align-self: flex-start;
       z-index: 1;
-      margin: 30px 50px;
+      margin: 1rem 2rem;
       top: 0;
       position: absolute;
       pointer-events: none;
@@ -162,6 +164,8 @@ export default {
 
       h1 {
         font-size: 1.8em;
+        margin: 0;
+        line-height: 1.5em;
 
         text-transform: uppercase;
         color: @color-primary;
@@ -183,11 +187,6 @@ export default {
     .Sponsors {
       z-index: 2;
       transform-origin: bottom right;
-    }
-    .Legend {
-      align-self: flex-start;
-      margin-left: 15px;
-      z-index: 2;
     }
     .YR__ctn {
       align-self: flex-start;
@@ -305,9 +304,6 @@ export default {
         background: #fff;
         box-shadow: 0 2px 4px -1px rgba(0,0,0,0.3);
     }
-    .Legend {
-      box-shadow: 0 6px 15px -5px #282828;
-    }
 
     @media screen and (max-width: 640px) {
       #geoapp:before {
@@ -318,5 +314,10 @@ export default {
     .mapboxgl-popup-content {
         box-shadow: 0 5px 21px -3px rgba(0,0,0,.5);
     }
+  }
+  .mapboxgl-ctrl-top-right,
+  .mapboxgl-ctrl-bottom-right,
+  .Sponsors {
+    right: @dim-info-panel;
   }
 </style>
