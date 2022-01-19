@@ -2,12 +2,22 @@ pages:
   image: node:8
   stage: build
   script:
+    - echo $CI_PROJECT_NAMESPACE
+    - echo $CI_PROJECT_NAME
+    - echo $CI_JOB_ID
     - npm install --progress=false
     - npm run build
     - cp -r dist/* public/
     - find public -type f -regex '.*\.\(htm\|html\|txt\|text\|js\|css\)$' -exec gzip -f -k {} \;
+    # - echo "Unit result" >> public/$CI_COMMIT_REF_SLUG/index.html
   artifacts:
     paths:
     - public
+  environment:
+    name: dev
+    url: "https://$CI_PROJECT_NAMESPACE.pages.gitlab.cartong.org/-/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public/index.html"
   only:
     - master
+    
+  variables:
+    PUBLIC_URL: "/-/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/-/jobs/$CI_JOB_ID/artifacts/public"
