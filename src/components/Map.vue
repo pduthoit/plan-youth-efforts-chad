@@ -423,6 +423,8 @@ export default {
           right: 420
         }
       });
+      let id = e.features[0].properties['id']
+      this.$store.commit("updateSelectedPlaceData", this.$store.state.submissions.filter(submission => submission.id == id)[0]);
     }
   }
 }

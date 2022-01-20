@@ -8,7 +8,6 @@
       <Map/>
       <BasemapPicker/>
       <InfoPanel/>
-      <CategoryPicker/>
       <YearRange/>
       <Sponsors/>
     </div>
@@ -113,7 +112,7 @@ export default {
     height: 100%;
   }
   .BasemapPicker {
-    align-self: flex-start;
+    align-self: flex-end;
   }
   #geoapp {
     height: 100%;

@@ -2,7 +2,7 @@
   <div
     class="InfoPanel"
     v-if="$store.state.submissions != null">
-    <InfoPanelPlace v-if="$store.state.selectedPlaceData != null" />
+    <InfoPanelPlace v-show="$store.state.selectedPlaceData != null" />
     <div class="InfoPanel__filtersActionsCtn" v-if="$store.state.selectedPlaceData === null">
       <input type="text" v-model="search" class="InfoPanel__search" placeholder="Search for a place..."/>
       <button class="InfoPanel__toggleFiltersBtn Button" @click="filtersShown = true" v-if="!filtersShown">
@@ -22,14 +22,23 @@
       <div class="InfoPanel__filters InfoPanel__filters--step2" v-if="$store.state.selectedCategory !== null" :data-category="$store.state.selectedCategory">
         <h3>2. Add <b>filters</b> ({{ activeFilterCount }} active filters)</h3>
         <div :class="'InfoPanel__filters--step2--list InfoPanel__filters--step2--' + $store.state.selectedCategory">
-          <div class="Filter" v-for="key in Object.keys(filters[$store.state.selectedCategory])" :key="key" :data-enabled="filters[$store.state.selectedCategory][key].enabled ? 'true' : 'false'">
+          <div class="Filter" :data-type="filters[$store.state.selectedCategory][key].type" v-for="key in Object.keys(filters[$store.state.selectedCategory])" :key="key" :data-enabled="filters[$store.state.selectedCategory][key].enabled ? 'true' : 'false'">
             <button
               @click="filters[$store.state.selectedCategory][key].enabled = !filters[$store.state.selectedCategory][key].enabled"
               class="Filter__enableFilterBtn">
               {{ filters[$store.state.selectedCategory][key].enabled ? "-" : "+" }}
             </button>
-            <input type="checkbox" :id="key" :name="key" v-model="filters[$store.state.selectedCategory][key].data" :disabled="!filters[$store.state.selectedCategory][key].enabled"/>
+            <input
+              type="checkbox"
+              :id="key"
+              :name="key"
+              v-model="filters[$store.state.selectedCategory][key].data"
+              :disabled="!filters[$store.state.selectedCategory][key].enabled"
+              v-if="filters[$store.state.selectedCategory][key].type === 'switch'"/>
             <label :for="key">{{ filters[$store.state.selectedCategory][key].label }}</label>
+            <select v-if="filters[$store.state.selectedCategory][key].type === 'list'" v-model="filters[$store.state.selectedCategory][key].data">
+              <option v-for="(label, key) in filters[$store.state.selectedCategory][key].listItems" :value="key" :key="key">{{ label }}</option>
+            </select>
           </div>
         </div>
       </div>
@@ -82,6 +91,8 @@ import { words } from '@/constants/lang'
 import '@mapbox/mapbox-gl-geocoder/lib/mapbox-gl-geocoder.css';
 import CategoryPicker from './CategoryPicker.vue'
 import InfoPanelPlace from './InfoPanelPlace.vue'
+import store from '@/store/store.js';
+
 export default {
   name: 'InfoPanel',
   components: {
@@ -113,7 +124,7 @@ export default {
     },
     filters: {
       'education': {
-        "groupConsent/groupEducation/groupEducStatus/educOwnership": { label: "Facility ownership", type: "switch", data: true, enabled: false },
+        "groupConsent/groupEducation/groupEducStatus/educOwnership": { label: "Facility ownership", type: "list", listItems: store.state.lists.ownership, data: true, enabled: false },
         "groupConsent/groupEducation/groupEducStatus/operational": { label: "Is the facility operational", type: "switch", data: true, enabled: false },
         "groupConsent/groupEducation/groupEducStatus/educDisability": { label: "Mobility disability accessible", type: "switch", data: true, enabled: false },
         "groupConsent/groupEducation/groupEducFunctionning/price": { label: "Paid/Free", type: "switch", data: true, enabled: false },
@@ -129,11 +140,22 @@ export default {
       },
       'youth-organizations': {
         "groupConsent/groupParticipation/groupParticipationRegistration/registration": { label: "Availability of legal registration", type: "switch", data: true, enabled: false },
-        "groupConsent/groupParticipation/groupParticipationActivity/organizationActivitiy": { label: "Administrative level of operations", type: "switch", data: true, enabled: false },
-        "groupConsent/groupParticipation/groupParticipationActivity/activities": { label: "Main activities / areas of operations", type: "switch", data: true, enabled: false },
+        "groupConsent/groupParticipation/groupParticipationActivity/organizationActivitiy": { label: "Administrative level of operations", type: "list", listItems: store.state.lists.adminLevels, data: true, enabled: false },
+        "groupConsent/groupParticipation/groupParticipationActivity/activities": { label: "Main activities / areas of operations", type: "list", listItems: store.state.lists.activities, data: true, enabled: false }
       }
     }
   }),
+  watch: {
+    '$store.state.selectedPlaceData': function() {
+      this.$root.$refs.InfoPanelPlace.showImage()
+    },
+    '$store.state.selectedCategory': function() {
+      let showFullLists = !(this.$store.state.selectedCategory === null)
+      Object.keys(this.categoryListShow).forEach((key) => {
+        this.categoryListShow[key] = showFullLists
+      });
+    },
+  },
   methods: {
     showMore: function(category) {
       return this.categoryListShow[category] ? "Show less results" : "Show <b>" + (this.placesByCategoryFiltered(category).length - 5) + "</b> more results +";
@@ -144,6 +166,7 @@ export default {
         let activeFilters = Object.keys(this.filters[category]).filter(filter => this.filters[category][filter].enabled === true)
         return activeFilters.every(key => {
           if (this.filters[category][key].type === "switch") return (this.filters[category][key].data ? "yes" : "no") === submission.data[key]
+          if (this.filters[category][key].type === "list") return submission.data[key].split(' ').includes(this.filters[category][key].data)
           return this.filters[category][key].data === submission.data[key]
         });
       })
@@ -181,13 +204,14 @@ export default {
   position: fixed;
   width: @dim-info-panel;
   max-width: 100%;
-  background: rgba(240,240,240,0.8);
+  background: rgba(240,240,240,0.9);
   height: 100vh;
   top: 0;
   right: 0;
   z-index: 10;
   overflow-y: auto;
-  box-shadow: -5px 0 20px -5px rgba(0,0,0,0.08);
+  overflow-x: hidden;
+  box-shadow: -5px 0 20px -5px rgba(0,0,0,0.3);
   display: flex;
   flex-flow: column nowrap;
 
@@ -209,12 +233,41 @@ export default {
     margin-bottom: 1rem;
 
     &[data-enabled="false"] > *:not(.Filter__enableFilterBtn) { filter: grayscale(1) !important; opacity: 0.45; }
-    &[data-enabled="true"] > *:not(.Filter__enableFilterBtn) { filter: grayscale(0); }
+    &[data-enabled="true"] > *:not(.Filter__enableFilterBtn) { filter: grayscale(0);}
 
-    &[data-enabled="false"] label {
+    &[data-type="switch"][data-enabled="false"] label {
       &::after, &::before {
         content: initial;
       }
+    }
+
+    &[data-type="list"][data-enabled="false"] select {
+      display: none;
+    }
+
+    &[data-type="list"] select {
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: solid 1.5px #aaa;
+      margin-top: 0.5rem;
+      cursor: pointer;
+      appearance: none;
+      -moz-appearance: none;
+      -webkit-appearance: none;
+      background: url("../assets/img/icons/expand.svg") no-repeat calc(100% - .5rem) #fff;
+
+      /* For IE10 */
+      &::-ms-expand {
+        display: none;
+      }
+
+      option {
+        padding: 0.5rem;
+      }
+    }
+
+    &[data-type="list"][data-enabled="false"] select {
+      display: none;
     }
 
     // To show filters at the end
@@ -243,53 +296,64 @@ export default {
     }
 
     label {
-      @space-switch:  3rem;
       font-size: 0.85rem;
       cursor: pointer;
       margin-left: 1.5rem;
       width: 100%;
-      margin-right: @space-switch;
-
-      &::after {
-        content: "";
-        width: 31px;
-        height: 12px;
-        border-radius: 7px;
-        background: #c4c4c4;
-        position: absolute;
-        right: calc(5px - @space-switch);
-        cursor: pointer;
-        top: 0;
-      }
-
-      &::before {
-        content: "";
-        width: 20px;
-        height: 20px;
-        position: absolute;
-        border-radius: 50%;
-        background: #8F8F8F;
-        box-shadow: 0 5px 10px -2px rgba(0,0,0,0.2);
-        transition: all 0.2s ease-in;
-        right: calc(8px - @space-switch);
-        top: -4px;
-        transform: translateX(-14px);
-        z-index: 1;
-        cursor: pointer;
-      }
     }
 
-    input[type='checkbox'] {
-      opacity: 0;
-      position: absolute;
-      top: -100vh;
+    &[data-type="list"] {
+      display: flex;
+      flex-flow: column nowrap;
+    }
 
-      &:checked ~ label {
+    &[data-type="switch"] {
+
+      label {
+        @space-switch:  3rem;
+        margin-right: @space-switch;
+
+        &::after {
+          content: "";
+          width: 31px;
+          height: 12px;
+          border-radius: 7px;
+          background: #c4c4c4;
+          position: absolute;
+          right: calc(5px - @space-switch);
+          cursor: pointer;
+          top: 0;
+        }
+
         &::before {
-          transform: translateX(8px);
+          content: "";
+          width: 20px;
+          height: 20px;
+          position: absolute;
+          border-radius: 50%;
+          background: #8F8F8F;
+          box-shadow: 0 5px 10px -2px rgba(0,0,0,0.2);
+          transition: all 0.2s ease-in;
+          right: calc(8px - @space-switch);
+          top: -4px;
+          transform: translateX(-14px);
+          z-index: 1;
+          cursor: pointer;
+        }
+      }
+      input[type='checkbox'] {
+        opacity: 0;
+        position: absolute;
+        top: -100vh;
+
+        &:checked ~ label {
+          &::before {
+            transform: translateX(8px);
+          }
         }
       }
     }
+
   }
   .InfoPanel__filters {
     &[data-category='education'] {

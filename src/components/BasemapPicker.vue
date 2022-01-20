@@ -38,6 +38,7 @@ export default {
   methods: {
     updateStyle(style) {
       this.$store.commit('updateStyle', style)
+      this.shown = false
     },
     toggleBasemapPicker() {
       this.shown = !this.shown;
@@ -58,11 +59,11 @@ export default {
   .BasemapPicker {
     z-index: 1;
     position: absolute;
-    top: 10px;
-    left: 10px;
+    top: 110px;
+    right: calc(10px + @dim-info-panel);
     display: flex;
     flex-flow: column;
-    align-items: flex-start;
+    align-items: flex-end;
 
     .BasemapPicker__toggle {
       display: flex;
@@ -92,13 +93,13 @@ export default {
       color: #444;
 
       .BasemapPicker__item {
-        padding: 2px 8px 0 0;
+        padding: 2px 0 0 0;
         line-height: 12px;
         font-size: 0.8em;
         cursor: pointer;
         display: flex;
         flex-flow: column nowrap;
-        align-items: flex-start;
+        align-items: flex-end;
         opacity: 1;
 
         &--active {

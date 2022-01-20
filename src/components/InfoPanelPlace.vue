@@ -2,7 +2,15 @@
   <div class="InfoPanelPlace" v-if="place != null">
     <div class="IPP__header">
       <div class="IPP__headerActionsCtn">
-        <button @click="goBack()"><img :src="require('@/assets/img/icons/arrow.svg')"/></button>
+        <button class="IPP__headerActionsBtn IPP__headerActionsBtn--goBack" @click="goBack()"><img :src="require('@/assets/img/icons/arrow.svg')"/></button>
+        <button class="IPP__headerActionsBtn IPP__headerActionsBtn--fullscreen" @click="imageFullScreen = !imageFullScreen"><img :src="require('@/assets/img/icons/fullscreen.svg')"/></button>
+      </div>
+      <div
+        :class="'FullScreenImage' + (imageFullScreen ? ' FullScreenImage--show' : '')"
+        v-if="imageBase64 != null"
+        @click="imageFullScreen = !imageFullScreen"
+        >
+        <img :src="imageBase64" />
       </div>
       <div class="IPP__headerLabel">
         <img :src="require('@/assets/img/icons/' + place.icon +'-c.svg')"/>
@@ -18,8 +26,8 @@
           :class="'IPP__answer IPP__answer--' + answer.type">
           <div class="IPP__answerLabel">{{ answer.label }}</div>
           <div class="IPP__answerResult" :data-switch="answer.type === 'switch' ? place.data[answer.id] : false">
-            {{ answer.id !== 'id' ? place.data[answer.id] : "NaN" }}
-            </div>
+            {{ answer.type === 'list' ? list(place.data[answer.id], answer.mapping) :  place.data[answer.id] }}
+          </div>
         </div>
       </div>
     </div>
@@ -29,12 +37,13 @@
 <script>
 
 import * as Axios from 'axios'
-import '@mapbox/mapbox-gl-geocoder/lib/mapbox-gl-geocoder.css';
-import Map from './Map.vue'
+import store from '@/store/store.js';
 
 export default {
   name: 'InfoPanelPlace',
   data: () => ({
+    imageFullScreen: false,
+    imageBase64: null,
     answers: {
       'health': [
         { id: 'groupConsent/groupHealth/groupHltFunctinonning/admission', label: "Availability of hospitalization/admissions services", type: "switch" },
@@ -56,7 +65,7 @@ export default {
         { id: 'groupConsent/groupHealth/groupHltSrh/sexualViolenceResponse', label: "Availability of SGBV services", type: "switch" },
       ],
       'education': [
-        { id: 'groupConsent/groupEducation/groupEducStatus/educOwnership', label: "Facility ownership", type: "text" },
+        { id: 'groupConsent/groupEducation/groupEducStatus/educOwnership', label: "Facility ownership", type: "list", mapping: store.state.lists.ownership },
         { id: 'groupConsent/groupEducation/groupEducStatus/operational', label: "Is the facility operational ?", type: "switch" },
         { id: 'groupConsent/groupEducation/groupEducStatus/educDisability', label: "Mobility disability accessible", type: "switch" },
         { id: 'groupConsent/groupEducation/groupEducStatus/feedingProgram', label: "Existence of feeding program", type: "switch" },
@@ -70,13 +79,16 @@ export default {
       ],
       'youth-organizations': [
         { id: 'groupConsent/groupParticipation/groupParticipationRegistration/registration', label: "Availability of legal registration", type: "switch" },
-        { id: 'groupConsent/groupParticipation/groupParticipationActivity/organizationActivitiy', label: "Administrative level of operations", type: "text" },
-        { id: 'groupConsent/groupParticipation/groupParticipationActivity/activities', label: "Main activities / areas of operations", type: "text" },
+        { id: 'groupConsent/groupParticipation/groupParticipationActivity/organizationActivitiy', label: "Administrative level of operations", type: "list", mapping: store.state.lists.adminLevels },
+        { id: 'groupConsent/groupParticipation/groupParticipationActivity/activities', label: "Main activities / areas of operations", type: "list", mapping: store.state.lists.activities },
         { id: 'groupConsent/groupParticipation/groupParticipationActivity/orgaSize', label: "Total number of youth active in the organization", type: "kpi" },
         { id: 'groupConsent/groupParticipation/groupParticipationActivity/orgaSizeWomen', label: "Total number of female youth active in the organization", type: "kpi" },
       ]
     }
   }),
+  created () {
+    this.$root.$refs.InfoPanelPlace = this;
+  },
   computed: {
     categoryAnswers: function() {
       return this.answers[this.$store.state.selectedPlaceData.icon]
@@ -86,23 +98,29 @@ export default {
     },
     place: function () {
       return this.$store.state.selectedPlaceData
-    },
-  },
-  watch: {
-    '$store.state.selectedPlaceData': function() {
-      this.showImage()
-    },
+    }
   },
   methods: {
+    list: function (data, mapping) {
+      console.log(data)
+      let list = data.split(' ');
+      let mappedResults = "";
+      list.forEach(item => {
+        mappedResults += mapping[item] + ", "
+      });
+      return mappedResults.substring(0, mappedResults.length - 2);
+    },
     goBack: function () {
       this.$store.commit("updateSelectedPlaceData", null)
     },
-    showImage: function() {
+    showImage: function () {
       if (this.place.image !== undefined) {
-        Map.getBase64(this.place.image).then(function(results) {
+        let self = this
+        this.getBase64(this.place.image).then(function(results) {
           let base64 = "data:image/jpg;base64," + Buffer.from(results.data, 'binary').toString('base64').replace(/(\r\n|\n|\r)/gm, "");
           let imageHtml = document.getElementsByClassName('IPP__header')[0];
-          imageHtml.style.backgroundImage = "url('" + base64 + "')";
+          self.imageBase64 = base64;
+          imageHtml.style.backgroundImage = "url('" + self.imageBase64 + "')" ;
         });
         // image = '<div class="Image"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
       }
@@ -138,26 +156,74 @@ export default {
 
   .IPP__header {
     background: #ddd;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    min-height: 12rem;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-between;
 
-    .IPP__headerActionsCtn {
-      padding: 1rem;
-      margin-bottom: 1rem;
-      button {
-        @btn-size: 42px;
-        border-radius: 50%;
-        height: @btn-size;
+    .FullScreenImage {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      background: rgba(0,0,0,0.8);
+      background-size: unset;
+      cursor: pointer;
+      background-repeat: no-repeat;
+      background-position: center center;
+      inset: 0;
+      img {
+        margin: 150px;
+        border: solid;
+        box-shadow: 0 4rem 9rem -2rem rgba(0,0,0,0.8);
+        cursor: pointer;
+      }
+      &--show {
         display: flex;
         justify-content: center;
         align-items: center;
-        width: @btn-size;
-        background: white;
-        box-shadow: 0 5px 10px -2px rgba(0,0,0,0.1);
+      }
+    }
+    .IPP__headerActionsCtn {
+      padding: 0 0 1rem 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-flow: row nowrap;
+      justify-content: space-between;
+
+      button.IPP__headerActionsBtn {
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
         border: none;
         outline: none;
         cursor: pointer;
-        img {
-          width: 70%;
-          transform: rotate(180deg);
+
+        &--fullscreen {
+          background: rgba(0, 0, 0, 0.25);
+          width: 2.2rem;
+          height: 2rem;
+          border-radius: 0 0 0 10px;
+          img {
+            width: 70%;
+          }
+        }
+
+        &--goBack {
+          margin-top: 1rem;
+          @btn-size: 42px;
+          border-radius: 50%;
+          height: @btn-size;
+          width: @btn-size;
+          background: white;
+          box-shadow: 0 5px 10px -2px rgba(0,0,0,0.1);
+          img {
+            width: 70%;
+            transform: rotate(180deg);
+          }
         }
       }
     }
@@ -226,12 +292,13 @@ export default {
           }
         }
 
-        &--text {
+        &--text, &--list {
           flex-flow: column nowrap;
           align-items: flex-start;
 
           .IPP__answerResult {
             margin-top: 7px;
+            line-height: 1.4em;
 
             &::before {
               content: "";

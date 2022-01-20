@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import * as Axios from 'axios'
-
 Vue.use(Vuex);
 
 export default new Vuex.Store({
@@ -12,6 +11,34 @@ export default new Vuex.Store({
       nigeria:  'aJn6r5KosffwG4S4exSzrJ',
       niger:    'akY29uvotxjroqJPvwxd6J',
       cameroon: 'aubaACN3DGxZ7TGUThEfcp'
+    },
+    lists: {
+      ownership: {
+        'government': 'Public',
+        'private': 'Private',
+      },
+      adminLevels: {
+        'community': 'Community/Commune',
+        'department': "Department",
+        'state': "State",
+        'regional': "Regional",
+        'national': "National",
+        'international': "International"
+      },
+      activities: {
+        'educ': "Education",
+        'nutrition': "Nutrition",
+        'srh':"Sexual Reproductive Health and Rights",
+        'hlt': "Health",
+        'protection': "Protection and Safeguarding",
+        'eco': "Economic Empowerment",
+        'conflictResolution': "Conflict Resolution and Peace Building",
+        'advocacy': "Advocacy and Influencing",
+        'childhoodDev': "Early Childhood Development",
+        'gender': "Gender Equality and Inclusion",
+        'wash': "Water Sanitation and Hygiene (WASH)",
+        'ict': "ICT for Development"
+      }
     },
     KOBO_USERNAME: 'youthprojectlcr',
     YEAR_DATA: null,
@@ -34,12 +61,6 @@ export default new Vuex.Store({
       'education': { icon: 'education', shown: true, color: "#00843d"},
       'health': { icon: 'health', shown: true, color: "#0072ce"},
       'youth-organizations': { icon: 'youth-organizations', shown: true, color: "#e17800"}
-      // 'child-protection': { icon: 'child-protection', label: 'child-protection', shown: true, color: "#0072ce"},
-      // 'community-building': { icon: 'community-building', label: 'community-building', shown: true, color: "#00843d"},
-      // 'data': { icon: 'data', label: 'data', shown: true, color: "#e17800"},
-      // 'school': { icon: 'school', label: 'school', shown: true, color: "#d22630"},
-      // 'sexual-violence': { icon: 'sexual-violence', label: 'sexual-violence', shown: true, color: "#ef008c"},
-      // 'training': { icon: 'training', label: 'training', shown: true, color: "#f1c400"},
     },
     newContent: false
   },
