@@ -4,23 +4,23 @@
     v-if="$store.state.submissions != null">
     <InfoPanelPlace v-show="$store.state.selectedPlaceData != null" />
     <div class="InfoPanel__filtersActionsCtn" v-if="$store.state.selectedPlaceData === null">
-      <input type="text" v-model="search" class="InfoPanel__search" placeholder="Search for a place..."/>
+      <input type="text" v-model="search" class="InfoPanel__search" :placeholder="words[lang].infoPanel.label.SearchPlaceholder"/>
       <button class="InfoPanel__toggleFiltersBtn Button" @click="filtersShown = true" v-if="!filtersShown">
         <img :src="require('@/assets/img/icons/slider.svg')"/>
-        Show filters
+        {{ words[lang].infoPanel.label.ShowFilters }}
       </button>
       <button class="InfoPanel__toggleFiltersBtn Button" @click="filtersShown = false" v-if="filtersShown">
         <img :src="require('@/assets/img/icons/close.svg')"/>
-        Hide filters
+        {{ words[lang].infoPanel.label.HideFilters }}
       </button>
     </div>
     <div class="InfoPanel__filtersCtn" v-if="filtersShown && $store.state.selectedPlaceData === null">
       <div class="InfoPanel__filters InfoPanel__filters--step1">
-        <h3>1. Select a <b>type of structure</b></h3>
+        <h3 v-html="words[lang].infoPanel.label.Step1Label"></h3>
         <CategoryPicker/>
       </div>
       <div class="InfoPanel__filters InfoPanel__filters--step2" v-if="$store.state.selectedCategory !== null" :data-category="$store.state.selectedCategory">
-        <h3>2. Add <b>filters</b> ({{ activeFilterCount }} active filters)</h3>
+        <h3 v-html="words[lang].infoPanel.label.Step2Label + ' (' + activeFilterCount + ' ' + words[lang].infoPanel.label.Step2LabelActiveFilters + ')'"></h3>
         <div :class="'InfoPanel__filters--step2--list InfoPanel__filters--step2--' + $store.state.selectedCategory">
           <div class="Filter" :data-type="filters[$store.state.selectedCategory][key].type" v-for="key in Object.keys(filters[$store.state.selectedCategory])" :key="key" :data-enabled="filters[$store.state.selectedCategory][key].enabled ? 'true' : 'false'">
             <button
@@ -35,9 +35,12 @@
               v-model="filters[$store.state.selectedCategory][key].data"
               :disabled="!filters[$store.state.selectedCategory][key].enabled"
               v-if="filters[$store.state.selectedCategory][key].type === 'switch'"/>
-            <label :for="key">{{ filters[$store.state.selectedCategory][key].label }}</label>
+            <label :for="key">{{ words[lang].infoPanel.filters[$store.state.selectedCategory][key] }}</label>
             <select v-if="filters[$store.state.selectedCategory][key].type === 'list'" v-model="filters[$store.state.selectedCategory][key].data">
-              <option v-for="(label, key) in filters[$store.state.selectedCategory][key].listItems" :value="key" :key="key">{{ label }}</option>
+              <option :value="null">{{ words[lang].infoPanel.label.SelectAnOption }}</option>
+              <option v-for="(id) in $store.state.lists[filters[$store.state.selectedCategory][key].listItems]" :value="id" :key="id">
+                {{ words[lang].infoPanel.lists[filters[$store.state.selectedCategory][key].listItems][id] }}
+              </option>
             </select>
           </div>
         </div>
@@ -45,10 +48,10 @@
     </div>
     <div class="InfoPanel__resultsCtn" v-if="$store.state.selectedPlaceData === null">
       <div class="InfoPanel__resultsHeader">
-        <h2>List of structures</h2>
+        <h2>{{ words[lang].infoPanel.label.StructuresList }}</h2>
         <button class="InfoPanel__exportBtn Button">
           <img :src="require('@/assets/img/icons/download.svg')"/>
-          Export data
+          {{ words[lang].infoPanel.label.ExportData }}
         </button>
       </div>
       <div
@@ -60,10 +63,13 @@
             <img
               :src="require('@/assets/img/icons/' + category +'.svg')"
               :style="'background-color:'+$store.state.categories[category].color"/>
-            <h2>{{ category }}</h2>
+            <h2>{{ words[lang].category[category] }}</h2>
           </div>
           <div class="InfoPanel__categHeaderRight">
-            <span><b>{{ placesByCategoryFiltered(category).length }}</b> out of {{ placesByCategory(category).length  }} results</span>
+            <span>
+              <b>{{ placesByCategoryFiltered(category).length }}</b>
+              {{ words[lang].infoPanel.label.PlacesCountCategOutOff }} {{ placesByCategory(category).length  }} {{ words[lang].infoPanel.label.PlacesCountCategResults }}
+            </span>
           </div>
         </div>
         <div
@@ -91,7 +97,6 @@ import { words } from '@/constants/lang'
 import '@mapbox/mapbox-gl-geocoder/lib/mapbox-gl-geocoder.css';
 import CategoryPicker from './CategoryPicker.vue'
 import InfoPanelPlace from './InfoPanelPlace.vue'
-import store from '@/store/store.js';
 
 export default {
   name: 'InfoPanel',
@@ -124,24 +129,24 @@ export default {
     },
     filters: {
       'education': {
-        "groupConsent/groupEducation/groupEducStatus/educOwnership": { label: "Facility ownership", type: "list", listItems: store.state.lists.ownership, data: true, enabled: false },
-        "groupConsent/groupEducation/groupEducStatus/operational": { label: "Is the facility operational", type: "switch", data: true, enabled: false },
-        "groupConsent/groupEducation/groupEducStatus/educDisability": { label: "Mobility disability accessible", type: "switch", data: true, enabled: false },
-        "groupConsent/groupEducation/groupEducFunctionning/price": { label: "Paid/Free", type: "switch", data: true, enabled: false },
-        "groupConsent/groupEducation/groupEducCurriculum/peacebuilding": { label: "Peacebuilding content included in curriculum ", type: "switch", data: true, enabled: false },
-        "groupConsent/groupEducation/groupEducReporting/reportingSystem": { label: "Existence of SEA reporting system", type: "switch", data: true, enabled: false },
-        "groupConsent/groupEducation/groupEducSecurity/shelter": { label: "History of use as a shelter, military operations base or storage center", type: "switch", data: true, enabled: false },
+        "groupConsent/groupEducation/groupEducStatus/educOwnership": { type: "list", listItems: "ownership", data: null, enabled: false },
+        "groupConsent/groupEducation/groupEducStatus/operational": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupEducation/groupEducStatus/educDisability": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupEducation/groupEducFunctionning/price": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupEducation/groupEducCurriculum/peacebuilding": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupEducation/groupEducReporting/reportingSystem": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupEducation/groupEducSecurity/shelter": { type: "switch", data: true, enabled: false },
       },
       'health': {
-        "groupConsent/groupHealth/groupHltFunctinonning/hltDisability": { label: "Mobility disability accessible", type: "switch", data: true, enabled: false },
-        "groupConsent/groupHealth/groupHltService/youthService": { label: "Availability of youth-friendly health services", type: "switch", data: true, enabled: false },
-        "groupConsent/groupHealth/groupHltService/serviceWomen": { label: "Availability of women and girl focused health services", type: "switch", data: true, enabled: false },
-        "groupConsent/groupHealth/groupHltSrh/sexualViolenceResponse": { label: "Availability of SGBV services", type: "switch", data: true, enabled: false },
+        "groupConsent/groupHealth/groupHltFunctinonning/hltDisability": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupHealth/groupHltService/youthService": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupHealth/groupHltService/serviceWomen": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupHealth/groupHltSrh/sexualViolenceResponse": { type: "switch", data: true, enabled: false },
       },
       'youth-organizations': {
-        "groupConsent/groupParticipation/groupParticipationRegistration/registration": { label: "Availability of legal registration", type: "switch", data: true, enabled: false },
-        "groupConsent/groupParticipation/groupParticipationActivity/organizationActivitiy": { label: "Administrative level of operations", type: "list", listItems: store.state.lists.adminLevels, data: true, enabled: false },
-        "groupConsent/groupParticipation/groupParticipationActivity/activities": { label: "Main activities / areas of operations", type: "list", listItems: store.state.lists.activities, data: true, enabled: false }
+        "groupConsent/groupParticipation/groupParticipationRegistration/registration": { type: "switch", data: true, enabled: false },
+        "groupConsent/groupParticipation/groupParticipationActivity/organizationActivitiy": { type: "list", listItems: "adminLevels", data: null, enabled: false },
+        "groupConsent/groupParticipation/groupParticipationActivity/activities": { type: "list", listItems: "activities", data: null, enabled: false }
       }
     }
   }),
@@ -158,7 +163,7 @@ export default {
   },
   methods: {
     showMore: function(category) {
-      return this.categoryListShow[category] ? "Show less results" : "Show <b>" + (this.placesByCategoryFiltered(category).length - 5) + "</b> more results +";
+      return this.categoryListShow[category] ? words[this.lang].infoPanel.label.ShowLessResults : words[this.lang].infoPanel.label.Show + " <b>" + (this.placesByCategoryFiltered(category).length - this.limit) + "</b> " +  words[this.lang].infoPanel.label.MoreResults;
     },
     placesByCategoryFiltered: function(category) {
       let results = this.$store.state.submissions.filter(submission => submission.icon == category && submission.label.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")))
@@ -166,7 +171,10 @@ export default {
         let activeFilters = Object.keys(this.filters[category]).filter(filter => this.filters[category][filter].enabled === true)
         return activeFilters.every(key => {
           if (this.filters[category][key].type === "switch") return (this.filters[category][key].data ? "yes" : "no") === submission.data[key]
-          if (this.filters[category][key].type === "list") return submission.data[key].split(' ').includes(this.filters[category][key].data)
+          if (this.filters[category][key].type === "list") {
+            if (this.filters[category][key].data === null) return true;
+            return submission.data[key].split(' ').includes(this.filters[category][key].data)
+          }
           return this.filters[category][key].data === submission.data[key]
         });
       })
@@ -289,7 +297,7 @@ export default {
       align-items: center;
       height: 14px;
       max-width: 14px;
-      border-radius: 50%;
+      border-radius: 2px;
       color: white;
       cursor: pointer;
       font-size: 0.65rem;
@@ -357,13 +365,13 @@ export default {
   }
   .InfoPanel__filters {
     &[data-category='education'] {
-      input[type='checkbox']:checked ~ label::before, .Filter[data-enabled="false"] .Filter__enableFilterBtn { background: @color-education; }
+      input[type='checkbox']:checked ~ label::before, .Filter[data-enabled="true"] .Filter__enableFilterBtn { background: @color-education; }
     }
     &[data-category='health'] {
-      input[type='checkbox']:checked ~ label::before, .Filter[data-enabled="false"] .Filter__enableFilterBtn  { background: @color-health; }
+      input[type='checkbox']:checked ~ label::before, .Filter[data-enabled="true"] .Filter__enableFilterBtn  { background: @color-health; }
     }
     &[data-category='youth-organizations'] {
-      input[type='checkbox']:checked ~ label::before, .Filter[data-enabled="false"] .Filter__enableFilterBtn { background: @color-youth-organizations; }
+      input[type='checkbox']:checked ~ label::before, .Filter[data-enabled="true"] .Filter__enableFilterBtn { background: @color-youth-organizations; }
     }
   }
 
@@ -500,11 +508,14 @@ export default {
     }
 
     .InfoPanel__showMore {
-      font-size: .7rem;
+      font-size: 0.7rem;
       text-align: center;
-      margin: 0.5rem 1.5rem 0.5rem 0.5rem;
-      color: #A9A9A9;
+      padding: 0.75rem 1.5rem 0.5rem 0.5rem;
+      color: #9E9E9E;
       cursor: pointer;
+      position: sticky;
+      background: linear-gradient(0deg, rgba(255,255,255,0.9) 80%, transparent);
+      bottom: 0;
     }
 
     .InfoPanel__place {

@@ -59,6 +59,7 @@ export default {
 
     label {
       padding: .25rem .5rem;
+      min-height: 27px;
     }
 
     &:nth-child(1) { border-radius: @rad-box 0 0 @rad-box; border-right-width: @border-w; }

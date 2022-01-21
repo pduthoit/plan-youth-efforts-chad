@@ -18,15 +18,18 @@
       </div>
     </div>
     <div class="IPP__content">
-      <h3>Informations</h3>
+      <h3>{{ words[lang].infoPanel.label.Informations }}</h3>
       <div class="IPP__answers">
         <div
           v-for="answer in categoryAnswers"
           :key="answer.id"
           :class="'IPP__answer IPP__answer--' + answer.type">
-          <div class="IPP__answerLabel">{{ answer.label }}</div>
-          <div class="IPP__answerResult" :data-switch="answer.type === 'switch' ? place.data[answer.id] : false">
-            {{ answer.type === 'list' ? list(place.data[answer.id], answer.mapping) :  place.data[answer.id] }}
+          <div class="IPP__answerLabel">{{ words[lang].infoPanel.answers[place.icon][answer.id] }}</div>
+          <div class="IPP__answerResult" v-if="answer.type === 'switch'" :data-switch="place.data[answer.id]">
+            {{ words[lang].infoPanel.results[place.data[answer.id]] }}
+          </div>
+          <div class="IPP__answerResult" v-else>
+            {{ answer.type === 'list' ? list(place.data[answer.id], answer.mapping) : place.data[answer.id] }}
           </div>
         </div>
       </div>
@@ -37,52 +40,53 @@
 <script>
 
 import * as Axios from 'axios'
-import store from '@/store/store.js';
+import { words } from '@/constants/lang'
 
 export default {
   name: 'InfoPanelPlace',
   data: () => ({
     imageFullScreen: false,
     imageBase64: null,
+    words,
     answers: {
       'health': [
-        { id: 'groupConsent/groupHealth/groupHltFunctinonning/admission', label: "Availability of hospitalization/admissions services", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltFunctinonning/hltDisability', label: "Mobility disability accessible", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltFunctinonning/staff', label: "Total number of healthcare staff", type: "kpi" },
-        { id: 'groupConsent/groupHealth/groupHltFunctinonning/staffFemale', label: "Total number of female healthcare staff", type: "kpi" },
-        { id: 'groupConsent/groupHealth/groupHltFunctinonning/referralReceive', label: "Facility receives referrals", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltFunctinonning/referralSend', label: "Facility makes referrals", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltService/ambulance', label: "Availability of a working ambulance", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltService/service', label: "Most used services", type: "text" },
-        { id: 'groupConsent/groupHealth/groupHltService/service247', label: "Availability of some services 24/7", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltService/youthService', label: "Availability of youth-friendly health services", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltService/youthServiceTYpe', label: "Available youth-friendly health services", type: "text" },
-        { id: 'groupConsent/groupHealth/groupHltService/serviceWomen', label: "Availability of women and girl focused health services", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltService/serviceWomenType', label: "Available women and girl focused health services", type: "text" },
-        { id: 'groupConsent/groupHealth/groupHltService/providerTraining', label: "Availability of current staff trained to provide youth-friendly services", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltSrh/monitoringSystem', label: "Availability of SRH quality assurance monitoring system", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltSrh/monitoringSystemYouth', label: "Involvement of adolescents and youth in SRH quality assurance monitoring", type: "switch" },
-        { id: 'groupConsent/groupHealth/groupHltSrh/sexualViolenceResponse', label: "Availability of SGBV services", type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltFunctinonning/admission', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltFunctinonning/hltDisability', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltFunctinonning/staff', type: "kpi" },
+        { id: 'groupConsent/groupHealth/groupHltFunctinonning/staffFemale', type: "kpi" },
+        { id: 'groupConsent/groupHealth/groupHltFunctinonning/referralReceive', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltFunctinonning/referralSend', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltService/ambulance', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltService/service', type: "text" },
+        { id: 'groupConsent/groupHealth/groupHltService/service247', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltService/youthService', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltService/youthServiceTYpe', type: "text" },
+        { id: 'groupConsent/groupHealth/groupHltService/serviceWomen', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltService/serviceWomenType', type: "text" },
+        { id: 'groupConsent/groupHealth/groupHltService/providerTraining', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltSrh/monitoringSystem', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltSrh/monitoringSystemYouth', type: "switch" },
+        { id: 'groupConsent/groupHealth/groupHltSrh/sexualViolenceResponse', type: "switch" },
       ],
       'education': [
-        { id: 'groupConsent/groupEducation/groupEducStatus/educOwnership', label: "Facility ownership", type: "list", mapping: store.state.lists.ownership },
-        { id: 'groupConsent/groupEducation/groupEducStatus/operational', label: "Is the facility operational ?", type: "switch" },
-        { id: 'groupConsent/groupEducation/groupEducStatus/educDisability', label: "Mobility disability accessible", type: "switch" },
-        { id: 'groupConsent/groupEducation/groupEducStatus/feedingProgram', label: "Existence of feeding program", type: "switch" },
-        { id: 'groupConsent/groupEducation/groupEducFunctionning/teacherFacility', label: "Total number of teachers ", type: "kpi" },
-        { id: 'groupConsent/groupEducation/groupEducFunctionning/teacherFemale', label: "Total number of female teachers", type: "kpi" },
-        { id: 'groupConsent/groupEducation/groupEducFunctionning/price', label: "Free", type: "switch" },
-        { id: 'groupConsent/groupEducation/groupEducCurriculum/peacebuilding', label: "Peacebuilding content included in curriculum ", type: "switch" },
-        { id: 'groupConsent/groupEducation/groupEducReporting/reportingSystem', label: "Existence of SEA reporting system", type: "switch" },
-        { id: 'groupConsent/groupEducation/groupEducReporting/schoolCommitee', label: "Existence of school-based management committee", type: "switch" },
-        { id: 'groupConsent/groupEducation/groupEducSecurity/shelter', label: "History of use as a shelter, military operations base or storage center", type: "switch" },
+        { id: 'groupConsent/groupEducation/groupEducStatus/educOwnership', type: "list", mapping: "ownership" },
+        { id: 'groupConsent/groupEducation/groupEducStatus/operational', type: "switch" },
+        { id: 'groupConsent/groupEducation/groupEducStatus/educDisability', type: "switch" },
+        { id: 'groupConsent/groupEducation/groupEducStatus/feedingProgram', type: "switch" },
+        { id: 'groupConsent/groupEducation/groupEducFunctionning/teacherFacility', type: "kpi" },
+        { id: 'groupConsent/groupEducation/groupEducFunctionning/teacherFemale', type: "kpi" },
+        { id: 'groupConsent/groupEducation/groupEducFunctionning/price', type: "switch" },
+        { id: 'groupConsent/groupEducation/groupEducCurriculum/peacebuilding', type: "switch" },
+        { id: 'groupConsent/groupEducation/groupEducReporting/reportingSystem', type: "switch" },
+        { id: 'groupConsent/groupEducation/groupEducReporting/schoolCommitee',type: "switch" },
+        { id: 'groupConsent/groupEducation/groupEducSecurity/shelter', type: "switch" },
       ],
       'youth-organizations': [
-        { id: 'groupConsent/groupParticipation/groupParticipationRegistration/registration', label: "Availability of legal registration", type: "switch" },
-        { id: 'groupConsent/groupParticipation/groupParticipationActivity/organizationActivitiy', label: "Administrative level of operations", type: "list", mapping: store.state.lists.adminLevels },
-        { id: 'groupConsent/groupParticipation/groupParticipationActivity/activities', label: "Main activities / areas of operations", type: "list", mapping: store.state.lists.activities },
-        { id: 'groupConsent/groupParticipation/groupParticipationActivity/orgaSize', label: "Total number of youth active in the organization", type: "kpi" },
-        { id: 'groupConsent/groupParticipation/groupParticipationActivity/orgaSizeWomen', label: "Total number of female youth active in the organization", type: "kpi" },
+        { id: 'groupConsent/groupParticipation/groupParticipationRegistration/registration', type: "switch" },
+        { id: 'groupConsent/groupParticipation/groupParticipationActivity/organizationActivitiy', type: "list", mapping: "adminLevels" },
+        { id: 'groupConsent/groupParticipation/groupParticipationActivity/activities', type: "list", mapping: "activities" },
+        { id: 'groupConsent/groupParticipation/groupParticipationActivity/orgaSize', type: "kpi" },
+        { id: 'groupConsent/groupParticipation/groupParticipationActivity/orgaSizeWomen', type: "kpi" },
       ]
     }
   }),
@@ -102,11 +106,10 @@ export default {
   },
   methods: {
     list: function (data, mapping) {
-      console.log(data)
       let list = data.split(' ');
       let mappedResults = "";
       list.forEach(item => {
-        mappedResults += mapping[item] + ", "
+        mappedResults += this.words[this.lang].infoPanel.lists[mapping][item] + ", "
       });
       return mappedResults.substring(0, mappedResults.length - 2);
     },
@@ -256,7 +259,7 @@ export default {
       h2 {
         font-family: @font-primary;
         font-size: 1.6em;
-        margin: 0;
+        margin: 0 0.5rem 0 0;
         font-weight: 100;
       }
     }

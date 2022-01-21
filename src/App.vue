@@ -1,5 +1,5 @@
 <template>
-  <div :class="$store.state.style === 'plcartong/ckoy2wdqy00px17nj4b0otfog/draft' ? 'App App--satellite' : 'App'">
+  <div :class="$store.state.style === 'plcartong/ckoy2wdqy00px17nj4b0otfog/draft' ? 'App App--satellite' : 'App'" :lang="this.$store.state.lang">
     <div id="geoapp" :class="$store.state.submissions === null ? 'Blur' : ''">
       <div class="Title">
         <h1 v-html="this.words[this.$store.state.lang].general.Title"></h1>
@@ -151,8 +151,8 @@ export default {
 
     .Title {
       display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
+      flex-flow: column nowrap;
+      align-items: flex-start;
       align-self: flex-start;
       z-index: 1;
       margin: 1rem 2rem;
@@ -160,6 +160,7 @@ export default {
       position: absolute;
       pointer-events: none;
       user-select: none;
+      max-width: calc(100vw - @dim-info-panel);
 
       h1 {
         font-size: 1.8em;

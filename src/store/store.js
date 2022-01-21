@@ -13,32 +13,32 @@ export default new Vuex.Store({
       cameroon: 'aubaACN3DGxZ7TGUThEfcp'
     },
     lists: {
-      ownership: {
-        'government': 'Public',
-        'private': 'Private',
-      },
-      adminLevels: {
-        'community': 'Community/Commune',
-        'department': "Department",
-        'state': "State",
-        'regional': "Regional",
-        'national': "National",
-        'international': "International"
-      },
-      activities: {
-        'educ': "Education",
-        'nutrition': "Nutrition",
-        'srh':"Sexual Reproductive Health and Rights",
-        'hlt': "Health",
-        'protection': "Protection and Safeguarding",
-        'eco': "Economic Empowerment",
-        'conflictResolution': "Conflict Resolution and Peace Building",
-        'advocacy': "Advocacy and Influencing",
-        'childhoodDev': "Early Childhood Development",
-        'gender': "Gender Equality and Inclusion",
-        'wash': "Water Sanitation and Hygiene (WASH)",
-        'ict': "ICT for Development"
-      }
+      ownership: [
+        'government',
+        'private',
+      ],
+      adminLevels: [
+        'community',
+        'department',
+        'state',
+        'regional',
+        'national',
+        'international'
+      ],
+      activities: [
+        'educ',
+        'nutrition',
+        'srh',
+        'hlt',
+        'protection',
+        'eco',
+        'conflictResolution',
+        'advocacy',
+        'childhoodDev',
+        'gender',
+        'wash',
+        'ict'
+      ]
     },
     KOBO_USERNAME: 'youthprojectlcr',
     YEAR_DATA: null,

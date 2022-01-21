@@ -51,12 +51,12 @@ export default {
       font-family: @font-secondary;
       text-transform: uppercase;
       list-style-type: none;
-      margin: 10px;
+      margin: 0.5rem 0;
       padding: 0;
       color: #444;
 
       .Translator__item {
-        padding: 2px 8px 0 8px;
+        padding: 0 0.5rem;
         line-height: 12px;
         font-size: 0.8em;
         cursor: pointer;
@@ -65,10 +65,15 @@ export default {
         &--active {
           color: @color-primary;
           opacity: 1;
+          font-weight: bold;
         }
 
         &:not(:last-child) {
           border-right: solid 1px #444;
+        }
+
+        &:first-child {
+          padding-left: 0;
         }
       }
     }

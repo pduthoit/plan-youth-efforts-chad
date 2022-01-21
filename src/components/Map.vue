@@ -133,6 +133,116 @@ export default {
       const koboRes = await Axios(koboReqOptions)
       return koboRes;
     },
+    showActivePlace: function (coordinates) {
+      const size = 200;
+      let self = this;
+ 
+      // This implements `StyleImageInterface`
+      // to draw a pulsing dot icon on the map.
+      const pulsingDot = {
+        width: size,
+        height: size,
+        data: new Uint8Array(size * size * 4),
+        
+        // When the layer is added to the map,
+        // get the rendering context for the map canvas.
+        onAdd: function () {
+          const canvas = document.createElement('canvas');
+          canvas.width = this.width;
+          canvas.height = this.height;
+          this.context = canvas.getContext('2d');
+        },
+
+        // Call once before every frame where the icon will be used.
+        render: function () {
+          const duration = 1500;
+          const t = (performance.now() % duration) / duration;
+
+          const radius = (size / 2) * 0.3;
+          const outerRadius = (size / 2) * 0.7 * t + radius;
+          const context = this.context;
+
+          // Draw the outer circle.
+          context.clearRect(0, 0, this.width, this.height);
+          context.beginPath();
+          context.arc(
+            this.width / 2,
+            this.height / 2,
+            outerRadius,
+            0,
+            Math.PI * 2
+          );
+          context.fillStyle = `rgba(0, 0, 0, ${0.5 - t})`;
+          context.fill();
+
+          // Update this image's data with data from the canvas.
+          this.data = context.getImageData(
+            0,
+            0,
+            this.width,
+            this.height
+          ).data;
+
+          // Continuously repaint the map, resulting
+          // in the smooth animation of the dot.
+          self.$store.state.map.triggerRepaint();
+
+          // Return `true` to let the map know that the image was updated.
+          return true;
+        }
+      };
+
+      // If source, image or layer exists, remove it
+      if (typeof this.$store.state.map.getLayer('layer-poi-pulse') !== 'undefined') this.$store.state.map.removeLayer('layer-poi-pulse');
+      if (this.$store.state.map.hasImage('pulsing-poi')) this.$store.state.map.removeImage('pulsing-poi')
+      if (typeof this.$store.state.map.getSource('dot-point') !== 'undefined') this.$store.state.map.removeSource('dot-point')
+
+      this.$store.state.map.addImage('pulsing-poi', pulsingDot, { pixelRatio: 2 });
+
+      this.$store.state.map.addSource('dot-point', {
+        'type': 'geojson',
+        'data': {
+          'type': 'FeatureCollection',
+          'features': [{
+            'type': 'Feature',
+            'geometry': {
+              'type': 'Point',
+              'coordinates': coordinates
+            }
+          }]
+        }
+      });
+
+      // Disabled because not centered and not behind poi icons
+      // this.$store.state.map.addLayer({
+      //   'id': 'layer-poi-pulse',
+      //   'type': 'symbol',
+      //   'source': 'dot-point',
+      //   'layout': {
+      //     'icon-image': 'pulsing-poi',
+      //     'icon-anchor': 'center',
+      //     'icon-allow-overlap': true
+      //   },
+      // });
+    },
+
+    showPlace(e) {
+      let map = this.$store.state.map;
+      // this.$store.state.labelPopup.remove();
+
+      map.flyTo({
+        speed: 0.95,
+        center: e.features[0].geometry.coordinates,
+        essential: true,
+        zoom: 14,
+        padding: {
+          right: 420
+        }
+      });
+      let id = e.features[0].properties['id']
+      this.$store.commit("updateSelectedPlaceData", this.$store.state.submissions.filter(submission => submission.id == id)[0]);
+      this.showActivePlace(e.features[0].geometry.coordinates);
+    },
     showIcons: function (map) {
 
       for (let key in this.$store.state.categories) {
@@ -183,7 +293,7 @@ export default {
       let self = this;
 
       // Remove layers and source if they already exists
-      if (typeof this.$store.state.map.getLayer('poi-education') !== 'undefined') this.$store.state.map.removeLayer('poi-education');
+      if (typeof this.$store.state.map.getLayer('poi-education') !== 'undefined') { this.$store.state.map.removeLayer('poi-education'); console.log("removing it ") }
       if (typeof this.$store.state.map.getLayer('poi-health') !== 'undefined') this.$store.state.map.removeLayer('poi-health');
       if (typeof this.$store.state.map.getLayer('poi-youth-organizations') !== 'undefined') this.$store.state.map.removeLayer('poi-youth-organizations');
 
@@ -211,6 +321,7 @@ export default {
       places.features.forEach(function (feature) {
         var symbol = feature.properties['icon'];
         var layerID = 'poi-' + symbol;
+        console.log(layerID)
 
         // Add a layer for this symbol type if it hasn't been added already.
         if (typeof map.getLayer(layerID) === 'undefined') {
@@ -221,7 +332,10 @@ export default {
             'layout': {
               'icon-image': symbol,
               'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.15, 3, 0.25, 5, 0.25, 8, 0.25, 9, 0.3],
-              'icon-allow-overlap': true
+              'icon-allow-overlap': true,
+              'icon-anchor': 'center',
+              'icon-offset': [-9.85,0],
+              'icon-ignore-placement': true,
             },
             'filter': self.getClusterFilter(symbol)
           });
@@ -243,12 +357,12 @@ export default {
           })
 
           // Reset event listeners if they already exist
-          map.off('click', layerID, self.showPopup);
-          map.on('click', layerID, self.showPopup);
+          map.off('click', layerID, self.showPlace);
+          map.on('click', layerID, self.showPlace);
         }
       });
 
-      this.$store.commit('updateMap', map)
+      this.$store.commit('updateMap', map);
     },
     updateMarkers() {
       var map = this.$store.state.map;
@@ -374,57 +488,6 @@ export default {
         'L', r + r0 * x1, r + r0 * y1,
         'A', r0, r0, 0, largeArc, 0, r + r0 * x0, r + r0 * y0, '" fill="' + color + '" />'
       ].join(' ');
-    },
-    showPopup(e) {
-      let map = this.$store.state.map;
-      this.$store.state.labelPopup.remove();
-      var coordinates = e.features[0].geometry.coordinates.slice();
-      var image = "";
-
-      if (e.features[0].properties.image !== undefined) {
-        this.getBase64(e.features[0].properties.image).then(function(results) {
-          let base64 = "data:image/jpg;base64," + Buffer.from(results.data, 'binary').toString('base64').replace(/(\r\n|\n|\r)/gm, "");
-          let imageHtml = document.getElementsByClassName('Image')[0];
-          imageHtml.style.backgroundImage = "url('" + base64 + "')";
-        });
-
-        image = '<div class="Image"><div class="lds-ring"><div></div><div></div><div></div><div></div></div></div>';
-      }
-      var infrastructure = '<h3>' + e.features[0].properties.label + '</h3>'
-      let icon = e.features[0].properties.icon;
-      var subtype = '<span class="subtype ' + icon + '" style="background:' + this.$store.state.categories[icon].color + '">' + words[this.$store.state.lang].category[icon] + '</span>'
-
-      var type = "", lang = this.$store.state.lang;
-
-      if (e.features[0].properties['type_' + lang] != 'null') {
-        type = '<p>' + e.features[0].properties['type_' + lang] + '</p>';
-      } else if (e.features[0].properties['type_en'] != 'null') {
-        type = '<p>' + e.features[0].properties['type_en'] + '</p>';
-      }
-
-      // Ensure that if the map is zoomed out such that multiple
-      // copies of the feature are visible, the popup appears
-      // over the copy being pointed to.
-      while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-        coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-      }
-
-      new mapboxgl.Popup({offset: 30})
-        .setLngLat(coordinates)
-        .setHTML(image + infrastructure + subtype + type)
-        .addTo(map);
-
-      map.flyTo({
-        speed: 0.95,
-        center: e.features[0].geometry.coordinates,
-        essential: true,
-        zoom: 14,
-        padding: {
-          right: 420
-        }
-      });
-      let id = e.features[0].properties['id']
-      this.$store.commit("updateSelectedPlaceData", this.$store.state.submissions.filter(submission => submission.id == id)[0]);
     }
   }
 }
