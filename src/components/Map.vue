@@ -36,6 +36,9 @@ export default {
       return this.$store.state.lang
     }
   },
+  created () {
+    this.$root.$refs.Map = this;
+  },
   data: () => ({
     words,
     markers: {},
@@ -54,6 +57,10 @@ export default {
     },
     '$store.state.maxYearFilter': function() {
       if (this.$store.state.map != null) this.updateIcons()
+    },
+    '$store.state.selectedPlaceData': function() {
+      if (this.$store.state.map != null)
+        this.$store.state.selectedPlaceData === null ? this.removeActivePlace() : this.showActivePlace()
     },
   },
   methods: {
@@ -106,7 +113,8 @@ export default {
         'all',
         ['>=', ['get', 'year'], this.$store.state.minYearFilter + +this.$store.state.minYearShown - 1],
         ['<', ['get', 'year'], this.$store.state.maxYearFilter + +this.$store.state.minYearShown - 1],
-        ['==', ['get', 'icon'], category]
+        ['==', ['get', 'icon'], category],
+        ['match', ['get', 'id'], this.$root.$refs.InfoPanel.placesIdByCategoryFiltered(category), true, false],
       ];
     },
     getClusterFilter: function (category) {
@@ -133,17 +141,31 @@ export default {
       const koboRes = await Axios(koboReqOptions)
       return koboRes;
     },
-    showActivePlace: function (coordinates) {
-      const size = 200;
+
+    showActivePlace: function () {
+      let map = this.$store.state.map;
+      let result = this.$store.state.selectedPlaceData;
+
+      map.flyTo({
+        speed: 0.95,
+        center: result.coords,
+        essential: true,
+        zoom: 15,
+        padding: {
+          right: 420
+        }
+      });
+
+      const size = 260;
       let self = this;
- 
+
       // This implements `StyleImageInterface`
       // to draw a pulsing dot icon on the map.
       const pulsingDot = {
         width: size,
         height: size,
         data: new Uint8Array(size * size * 4),
-        
+
         // When the layer is added to the map,
         // get the rendering context for the map canvas.
         onAdd: function () {
@@ -207,41 +229,35 @@ export default {
             'type': 'Feature',
             'geometry': {
               'type': 'Point',
-              'coordinates': coordinates
+              'coordinates': result.coords
             }
           }]
         }
       });
 
       // Disabled because not centered and not behind poi icons
-      // this.$store.state.map.addLayer({
-      //   'id': 'layer-poi-pulse',
-      //   'type': 'symbol',
-      //   'source': 'dot-point',
-      //   'layout': {
-      //     'icon-image': 'pulsing-poi',
-      //     'icon-anchor': 'center',
-      //     'icon-allow-overlap': true
-      //   },
-      // });
+      this.$store.state.map.addLayer({
+        'id': 'layer-poi-pulse',
+        'type': 'symbol',
+        'source': 'dot-point',
+        'layout': {
+          'icon-image': 'pulsing-poi',
+          'icon-anchor': 'center',
+          'icon-allow-overlap': true
+        },
+      }, 'poi-education');
+    },
+
+    removeActivePlace: function () {
+      if (typeof this.$store.state.map.getLayer('layer-poi-pulse') !== 'undefined')
+        this.$store.state.map.removeLayer('layer-poi-pulse');
     },
 
     showPlace(e) {
-      let map = this.$store.state.map;
-      // this.$store.state.labelPopup.remove();
 
-      map.flyTo({
-        speed: 0.95,
-        center: e.features[0].geometry.coordinates,
-        essential: true,
-        zoom: 14,
-        padding: {
-          right: 420
-        }
-      });
       let id = e.features[0].properties['id']
       this.$store.commit("updateSelectedPlaceData", this.$store.state.submissions.filter(submission => submission.id == id)[0]);
-      this.showActivePlace(e.features[0].geometry.coordinates);
+      this.showActivePlace();
     },
     showIcons: function (map) {
 
@@ -293,7 +309,7 @@ export default {
       let self = this;
 
       // Remove layers and source if they already exists
-      if (typeof this.$store.state.map.getLayer('poi-education') !== 'undefined') { this.$store.state.map.removeLayer('poi-education'); console.log("removing it ") }
+      if (typeof this.$store.state.map.getLayer('poi-education') !== 'undefined') { this.$store.state.map.removeLayer('poi-education'); }
       if (typeof this.$store.state.map.getLayer('poi-health') !== 'undefined') this.$store.state.map.removeLayer('poi-health');
       if (typeof this.$store.state.map.getLayer('poi-youth-organizations') !== 'undefined') this.$store.state.map.removeLayer('poi-youth-organizations');
 
@@ -321,7 +337,6 @@ export default {
       places.features.forEach(function (feature) {
         var symbol = feature.properties['icon'];
         var layerID = 'poi-' + symbol;
-        console.log(layerID)
 
         // Add a layer for this symbol type if it hasn't been added already.
         if (typeof map.getLayer(layerID) === 'undefined') {
@@ -334,7 +349,7 @@ export default {
               'icon-size': ['interpolate', ['linear'], ['zoom'], 1, 0.15, 3, 0.25, 5, 0.25, 8, 0.25, 9, 0.3],
               'icon-allow-overlap': true,
               'icon-anchor': 'center',
-              'icon-offset': [-9.85,0],
+              'icon-offset': [-8,0],
               'icon-ignore-placement': true,
             },
             'filter': self.getClusterFilter(symbol)

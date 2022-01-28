@@ -157,7 +157,7 @@ export const words = {
         Step1Label: "1. Sélectionner un <b>type de structure</b>",
         Step2Label: "2. Ajouter des <b>filtres</b>",
         Step2LabelActiveFilters: "filtres actifs",
-        StructuresList: "Liste de structures",
+        StructuresList: "Liste des structures",
         ExportData: "Exporter les données",
         PlacesCountCategOutOff: " sur ",
         PlacesCountCategResults: " résultats",

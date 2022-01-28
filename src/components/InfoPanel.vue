@@ -49,7 +49,7 @@
     <div class="InfoPanel__resultsCtn" v-if="$store.state.selectedPlaceData === null">
       <div class="InfoPanel__resultsHeader">
         <h2>{{ words[lang].infoPanel.label.StructuresList }}</h2>
-        <button class="InfoPanel__exportBtn Button">
+        <button class="InfoPanel__exportBtn Button" @click="exportResults()">
           <img :src="require('@/assets/img/icons/download.svg')"/>
           {{ words[lang].infoPanel.label.ExportData }}
         </button>
@@ -104,6 +104,9 @@ export default {
     CategoryPicker,
     InfoPanelPlace
   },
+  created () {
+    this.$root.$refs.InfoPanel = this;
+  },
   computed: {
     lang: function () {
       return this.$store.state.lang
@@ -152,7 +155,8 @@ export default {
   }),
   watch: {
     '$store.state.selectedPlaceData': function() {
-      this.$root.$refs.InfoPanelPlace.showImage()
+      if (this.$store.state.selectedPlaceData != null)
+        this.$root.$refs.InfoPanelPlace.showImage()
     },
     '$store.state.selectedCategory': function() {
       let showFullLists = !(this.$store.state.selectedCategory === null)
@@ -160,10 +164,72 @@ export default {
         this.categoryListShow[key] = showFullLists
       });
     },
+    // Check if filters data has changed based on a deep watch, if yes update icons of the map
+    filters: {
+      handler() {
+        if (this.$store.state.map != null) this.$root.$refs.Map.updateIcons()
+      },
+      deep: true
+    },
   },
   methods: {
     showMore: function(category) {
       return this.categoryListShow[category] ? words[this.lang].infoPanel.label.ShowLessResults : words[this.lang].infoPanel.label.Show + " <b>" + (this.placesByCategoryFiltered(category).length - this.limit) + "</b> " +  words[this.lang].infoPanel.label.MoreResults;
+    },
+    exportResults: function() {
+      let categories = Object.keys(this.$store.state.categories)
+      if (this.$store.state.selectedCategory !== null) categories = [this.$store.state.selectedCategory]
+      categories.forEach((category) => {
+        let flattenResults = [];
+        let results = this.placesByCategoryFiltered(category)
+        results.forEach((result) => {
+          let flattenResult = this.flattenObject(result)
+          flattenResult['category'] = category
+          flattenResults.push(flattenResult)
+        })
+
+        let link = document.createElement('a')
+        link.id = 'download-csv'
+        link.setAttribute('href', 'data:text/plain;charset=utf-8,%EF%BB%BF' + encodeURIComponent(this.convertToCSV(flattenResults)));
+        link.setAttribute('download', this.getFilename(category));
+        document.body.appendChild(link)
+        document.querySelector('#' + link.id).click()
+        link.remove()
+      })
+    },
+    getFilename: function (category) {
+      return  category + "_" + new Date().toISOString().slice(0, 10) + '.csv'
+    },
+    convertToCSV: function (results) {
+      const labels = Object.keys(results[0])
+
+      let bigArray = [labels.join(';')]
+      results.forEach(result => { 
+        let array = []
+        labels.forEach((label) => {
+          let res = typeof result[label] === 'string' ? result[label].replace(/;/g, ',') : result[label]
+          array.push(res || "-")
+        })
+        bigArray.push(array.join(';').replace(/\n/g, ''))
+      })
+      return bigArray.join('\n')
+    },
+    flattenObject: function (obj) {
+        let flattenKeys = {};
+        for (let i in obj) {
+            if (!obj.hasOwnProperty(i)) continue;
+            if ((typeof obj[i]) == 'object') {
+                // flattenKeys[i] = obj[i];
+                let flatObject = this.flattenObject(obj[i]);
+                for (let j in flatObject) {
+                    if (!flatObject.hasOwnProperty(j)) continue;
+                    flattenKeys[i + '.' + j] = flatObject[j];
+                }
+            } else {
+                flattenKeys[i] = obj[i];
+            }
+        }
+        return flattenKeys;
     },
     placesByCategoryFiltered: function(category) {
       let results = this.$store.state.submissions.filter(submission => submission.icon == category && submission.label.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")))
@@ -180,6 +246,9 @@ export default {
       })
       return resultsAfterFilters;
     },
+    placesIdByCategoryFiltered: function (category) {
+      return this.placesByCategoryFiltered(category).map((place) => place.id)
+    },
     placesByCategory: function(category) {
       return this.$store.state.submissions.filter(submission => submission.icon == category)
     },
@@ -187,20 +256,13 @@ export default {
       let results = this.placesByCategoryFiltered(category)
       return this.categoryListShow[category] ? results : results.slice(0, this.limit);
     },
-    getCoordsById: function(id) {
+
+    getSubmissionById: function(id) {
       return this.$store.state.submissions.filter(submission => submission.id == id)
     },
     goToPlace: function(id) {
-      let result = this.getCoordsById(id)
+      let result = this.getSubmissionById(id)
       this.$store.commit("updateSelectedPlaceData", result[0]);
-      if (result != null) {
-        this.$store.state.map.flyTo({
-          speed: 0.95,
-          center: result[0].coords,
-          zoom: 14,
-          essential: true
-        });
-      }
     }
   }
 }
@@ -428,10 +490,19 @@ export default {
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: center;
+    transition: all .25s linear;
 
     img {
       width: 18px;
       margin-right: 5px;
+    }
+
+    &:hover {
+      background: #333;
+      color: white;
+      img {
+        filter: invert(1);
+      }
     }
   }
   .InfoPanel__categCtn {

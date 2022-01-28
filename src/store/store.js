@@ -79,7 +79,6 @@ export default new Vuex.Store({
     },
     updateSelectedPlaceData (state, placeData) {
       state.selectedPlaceData = placeData
-      console.log(state.selectedPlaceData)
     },
     updateLabelPopup (state, labelPopup) {
       state.labelPopup = labelPopup

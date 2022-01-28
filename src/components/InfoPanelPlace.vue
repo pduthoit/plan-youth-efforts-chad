@@ -162,7 +162,7 @@ export default {
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
-    min-height: 12rem;
+    min-height: 15rem;
     display: flex;
     flex-flow: column nowrap;
     justify-content: space-between;
