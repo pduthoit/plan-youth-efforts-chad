@@ -254,7 +254,9 @@ export default {
 
   // Edit app style if satellite imagery is used in the map
   .App.App--satellite #geoapp {
-
+    .InfoPanel {
+      box-shadow: -5px 0 25px -5px rgba(0,0,0,.5)
+    }
     &::before {
       background: linear-gradient(180deg, rgba(0,0,0,0.5),transparent);
     }

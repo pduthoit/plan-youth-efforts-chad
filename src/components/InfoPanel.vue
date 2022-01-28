@@ -166,13 +166,17 @@ export default {
     },
     // Check if filters data has changed based on a deep watch, if yes update icons of the map
     filters: {
-      handler() {
-        if (this.$store.state.map != null) this.$root.$refs.Map.updateIcons()
-      },
+      handler() { this.updateIcons() },
       deep: true
     },
+    search: function () {
+      this.updateIcons()
+    }
   },
   methods: {
+    updateIcons: function () {
+        if (this.$store.state.map != null) this.$root.$refs.Map.updateIcons()
+    },
     showMore: function(category) {
       return this.categoryListShow[category] ? words[this.lang].infoPanel.label.ShowLessResults : words[this.lang].infoPanel.label.Show + " <b>" + (this.placesByCategoryFiltered(category).length - this.limit) + "</b> " +  words[this.lang].infoPanel.label.MoreResults;
     },
@@ -233,6 +237,7 @@ export default {
     },
     placesByCategoryFiltered: function(category) {
       let results = this.$store.state.submissions.filter(submission => submission.icon == category && submission.label.normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, "")))
+      console.log(results)
       let resultsAfterFilters = results.filter(submission => {
         let activeFilters = Object.keys(this.filters[category]).filter(filter => this.filters[category][filter].enabled === true)
         return activeFilters.every(key => {
@@ -246,8 +251,12 @@ export default {
       })
       return resultsAfterFilters;
     },
-    placesIdByCategoryFiltered: function (category) {
-      return this.placesByCategoryFiltered(category).map((place) => place.id)
+    placesIdByCategoryFiltered: function () {
+      let idArray = []
+      Object.keys(this.$store.state.categories).forEach((category) => {
+        this.placesByCategoryFiltered(category).map((place) => idArray.push(place.id))
+      })
+      return idArray
     },
     placesByCategory: function(category) {
       return this.$store.state.submissions.filter(submission => submission.icon == category)

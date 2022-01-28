@@ -114,7 +114,7 @@ export default {
         ['>=', ['get', 'year'], this.$store.state.minYearFilter + +this.$store.state.minYearShown - 1],
         ['<', ['get', 'year'], this.$store.state.maxYearFilter + +this.$store.state.minYearShown - 1],
         ['==', ['get', 'icon'], category],
-        ['match', ['get', 'id'], this.$root.$refs.InfoPanel.placesIdByCategoryFiltered(category), true, false],
+        this.$root.$refs.InfoPanel.placesIdByCategoryFiltered().length > 0 ? ['match', ['get', 'id'], this.$root.$refs.InfoPanel.placesIdByCategoryFiltered(), true, false] : false
       ];
     },
     getClusterFilter: function (category) {
@@ -256,6 +256,8 @@ export default {
     showPlace(e) {
 
       let id = e.features[0].properties['id']
+      console.log(id)
+      console.log(e.features[0].properties)
       this.$store.commit("updateSelectedPlaceData", this.$store.state.submissions.filter(submission => submission.id == id)[0]);
       this.showActivePlace();
     },
